@@ -1,0 +1,46 @@
+# Secrets — never commit these
+.env
+.env.staging
+backend/.env
+backend/credentials/
+backend/credentials/google-service-account.json
+
+# Dependencies
+node_modules/
+
+# Logs
+backend/logs/
+*.log
+
+# DB dumps / backups (large, and may contain customer data)
+*.dump
+DB-Backup/
+jju_bank_backup.dump
+jju_prewipe_backup_*.json
+
+# Customer data exports / PDFs / working scratch — never commit
+JJU-Data/
+_to_delete/
+frontend/_tmp_pdf_sync_*/
+gold_loan_ledger.csv
+backend/live_schema.txt
+backend/reset_log.txt
+backend/reset_done.marker
+backend/.claude-tmp/
+
+# Design sample mockups (slips/vouchers) — not needed to run the app
+Claude outputs/
+
+# Old .bak copies of source files (git history is the real backup now)
+*.bak
+*.bak2
+
+# Uploaded files
+uploads/
+backend/uploads/
+
+# Session store (regenerated at runtime)
+backend/.sessions.json
+
+# OS cruft
+.DS_Store

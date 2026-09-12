@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Loan Lookup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --navy: #1a3a5c;
+    --navy-light: #234d79;
+    --gold: #c9a84c;
+    --gold-light: #f0e0a8;
+    --text: #1a1a1a;
+    --textl: #6b6b6b;
+    --border: #dddad2;
+    --red: #c0392b;
+    --green: #1a7a4a;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--navy);
+    letter-spacing: 0.01em;
+  }
+  header p {
+    font-size: 12px;
+    color: var(--textl);
+    margin-top: 4px;
+  }
+
+  /* ── Search bar ── */
+  .search-wrap {
+    display: flex;
+    gap: 10px;
+    max-width: 560px;
+    margin: 0 auto 28px;
+  }
+  .search-wrap input {
+    flex: 1;
+    padding: 12px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--navy); }
+  .search-wrap input::placeholder { color: #bbb; }
+  .search-wrap button {
+    padding: 12px 22px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+    white-space: nowrap;
+  }
+  .search-wrap button:hover { background: var(--navy-light); }
+  .search-wrap button:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Status messages ── */
+  #status {
+    text-align: center;
+    font-size: 13px;
+    color: var(--textl);
+    margin-bottom: 16px;
+    min-height: 20px;
+  }
+  #status.err { color: var(--red); }
+
+  /* ── Result card ── */
+  #result { max-width: 900px; margin: 0 auto; display: none; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .card-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-header .badge {
+    background: var(--gold);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .03em;
+  }
+
+  /* ── Details table ── */
+  table.detail {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.detail tr { border-bottom: 1px solid var(--border); }
+  table.detail tr:last-child { border-bottom: none; }
+  table.detail td {
+    padding: 9px 14px;
+    vertical-align: top;
+  }
+  table.detail td:first-child {
+    color: var(--textl);
+    font-size: 11.5px;
+    font-weight: 500;
+    width: 38%;
+    white-space: nowrap;
+  }
+  table.detail td:last-child {
+    font-weight: 500;
+    color: var(--text);
+    word-break: break-word;
+  }
+  table.detail tr:nth-child(even) td { background: #fafaf8; }
+
+  /* ── Ornament table ── */
+  table.ornament {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  table.ornament thead tr {
+    background: var(--navy);
+    color: #fff;
+  }
+  table.ornament thead td {
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  table.ornament tbody tr { border-bottom: 1px solid var(--border); }
+  table.ornament tbody tr:last-child { border: none; }
+  table.ornament tbody td {
+    padding: 8px 12px;
+    color: var(--text);
+  }
+  table.ornament tbody tr:nth-child(even) td { background: #fafaf8; }
+
+  /* ── History table ── */
+  table.history {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  table.history thead tr { background: var(--navy); color: #fff; }
+  table.history thead td {
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  table.history tbody tr { border-bottom: 1px solid var(--border); }
+  table.history tbody tr:last-child { border: none; }
+  table.history tbody td { padding: 8px 12px; font-size: 12.5px; }
+  table.history tbody tr:nth-child(even) td { background: #fafaf8; }
+
+  .tag-open  { color: var(--green); font-weight: 700; }
+  .tag-closed { color: var(--red); font-weight: 700; }
+  .amount { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    table.detail td:first-child { width: 44%; font-size: 11px; }
+    .search-wrap button { padding: 12px 14px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 Loan Case Lookup</h1>
+  <p>Enter a loan account number to view all details</p>
+</header>
+
+<div class="search-wrap">
+  <input id="inp" type="text" placeholder="e.g. GL-001, 00104003001234"
+         autocomplete="off" autocorrect="off" spellcheck="false"/>
+  <button id="btn" onclick="lookup()">Search</button>
+</div>
+
+<div id="status"></div>
+<div id="result"></div>
+
+<script>
+const API = '/api/records';
+
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') lookup();
+});
+
+async function lookup() {
+  const val = document.getElementById('inp').value.trim();
+  if (!val) { setStatus('Enter a loan account number', ''); return; }
+
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  setStatus('<span class="spinner"></span> Searching…', '');
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    // Search by loan_acc_no — fetch all records and filter client-side
+    // (mirrors how app.js queries the same API)
+    // Use the same jju_token that the main app stores after login
+    const token = localStorage.getItem('jju_token') || '';
+    if (!token) { setStatus('Not logged in — please open the main app and log in first', 'err'); btn.disabled = false; return; }
+    const res = await fetch(`${API}?search=${encodeURIComponent(val)}&limit=200`, {
+      headers: { 'x-auth-token': token }
+    });
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const json = await res.json();
+
+    // API returns { records: [...] } or just [...]
+    const all = Array.isArray(json) ? json : (json.records || []);
+
+    // Filter to only Gold Loan type records matching this loan_acc_no
+    const matches = all.filter(r => {
+      const d = r.data || {};
+      const loanNo = (d.loan_acc_no || '').toLowerCase();
+      const search = val.toLowerCase();
+      return loanNo === search || loanNo.includes(search);
+    });
+
+    if (!matches.length) {
+      setStatus(`No loan found for "<strong>${esc(val)}</strong>"`, 'err');
+      btn.disabled = false;
+      return;
+    }
+
+    // Primary record = first Gold Loan open; rest = history (slips, closing, etc.)
+    const primary = matches.find(r => {
+      const tx = r.tx_type || r.transaction_type || '';
+      return tx === 'Gold Loan' || tx.includes('Gold Loan');
+    }) || matches[0];
+
+    render(primary, matches);
+    setStatus(`Found <strong>${matches.length}</strong> record(s) for <strong>${esc(val)}</strong>`, '');
+
+  } catch(e) {
+    setStatus('Error: ' + e.message, 'err');
+  }
+  btn.disabled = false;
+}
+
+function render(rec, allMatches) {
+  const d = rec.data || {};
+  const fmt = v => v || '—';
+  const fmtAmt = v => v ? '₹ ' + Number(v).toLocaleString('en-IN') : '—';
+  const fmtDate = v => {
+    if (!v) return '—';
+    try { return new Date(v).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}); }
+    catch(_) { return v; }
+  };
+
+  // Determine status from history
+  const isClosed = allMatches.some(r => {
+    const tx = r.tx_type || r.transaction_type || '';
+    return tx.includes('Closing');
+  });
+
+  // Ornament items
+  let ornamentHTML = '';
+  try {
+    const items = typeof d.ornament_items === 'string'
+      ? JSON.parse(d.ornament_items) : (d.ornament_items || []);
+    if (items.length) {
+      const rows = items.map((it, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${esc(it.name || it.ornament_name || '—')}</td>
+          <td>${esc(it.qty || it.quantity || '—')}</td>
+          <td>${esc(it.weight || it.gross_weight || '—')} gm</td>
+          <td>${esc(it.net_weight || '—')} gm</td>
+          <td>${esc(it.purity || it.karat || '—')}</td>
+        </tr>`).join('');
+      ornamentHTML = `
+        <div class="card">
+          <div class="card-header">💍 Ornament Details</div>
+          <table class="ornament">
+            <thead><tr>
+              <td>#</td><td>Name</td><td>Qty</td>
+              <td>Gross Wt.</td><td>Net Wt.</td><td>Purity</td>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+  } catch(_) {}
+
+  // Transaction history
+  const histRows = allMatches.map(r => {
+    const tx = r.tx_type || r.transaction_type || '—';
+    const rd = r.data || {};
+    return `<tr>
+      <td>${fmtDate(r.created_at || r.date || rd.date)}</td>
+      <td>${esc(tx)}</td>
+      <td class="amount">${fmtAmt(rd.loan_amount)}</td>
+      <td>${esc(r.id || '—')}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('result').innerHTML = `
+
+    <!-- Status banner -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 14px;background:${isClosed?'#fdf0ee':'#edfaf3'};border-radius:var(--radius);border:1px solid ${isClosed?'#f5c6c0':'#b7e8cc'}">
+      <span style="font-weight:600;font-size:13px;color:${isClosed?'var(--red)':'var(--green)'}">
+        ${isClosed ? '🔒 Loan Closed' : '✅ Loan Active'}
+      </span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--navy)">
+        ${esc(d.loan_acc_no || '—')}
+      </span>
+    </div>
+
+    <!-- Customer details -->
+    <div class="card">
+      <div class="card-header">👤 Customer Details</div>
+      <table class="detail">
+        <tr><td>Full Name</td><td>${fmt(d.customer_name)}</td></tr>
+        <tr><td>Mobile</td><td>${fmt(d.mobile)}</td></tr>
+        <tr><td>Aadhar</td><td>${fmt(d.aadhar)}</td></tr>
+        <tr><td>PAN</td><td>${fmt(d.pan)}</td></tr>
+        <tr><td>Date of Birth</td><td>${fmtDate(d.dob)}</td></tr>
+        <tr><td>Occupation</td><td>${fmt(d.occupation)}</td></tr>
+        <tr><td>Address</td><td>${fmt(d.address)}</td></tr>
+        <tr><td>Nominee</td><td>${fmt(d.nominee_name)}${d.nominee_relation ? ' (' + d.nominee_relation + ')' : ''}</td></tr>
+        <tr><td>Referral</td><td>${fmt(d.referral)}</td></tr>
+      </table>
+    </div>
+
+    <!-- Loan details -->
+    <div class="card">
+      <div class="card-header">
+        🏦 Loan Details
+        <span class="badge">${esc(d.loan_acc_no || '—')}</span>
+      </div>
+      <table class="detail">
+        <tr><td>Loan Date</td><td>${fmtDate(d.date)}</td></tr>
+        <tr><td>Loan Amount</td><td class="amount" style="font-size:15px;font-weight:700;color:var(--navy)">${fmtAmt(d.loan_amount)}</td></tr>
+        <tr><td>Amount in Words</td><td>${fmt(d.loan_amount_words)}</td></tr>
+        <tr><td>Metal Type</td><td>${fmt(d.metal_type)}</td></tr>
+        <tr><td>Saving A/c No.</td><td>${fmt(d.saving_acc_no)}</td></tr>
+        <tr><td>Share A/c No.</td><td>${fmt(d.share_acc_no)}</td></tr>
+        <tr><td>Comments</td><td>${fmt(d.comments)}</td></tr>
+      </table>
+    </div>
+
+    <!-- Ornament details -->
+    ${ornamentHTML}
+
+    <!-- Transaction history -->
+    <div class="card">
+      <div class="card-header">📋 Transaction History (${allMatches.length})</div>
+      <table class="history">
+        <thead><tr>
+          <td>Date</td><td>Type</td><td>Amount</td><td>Record ID</td>
+        </tr></thead>
+        <tbody>${histRows}</tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('result').style.display = 'block';
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.innerHTML = msg;
+  el.className = cls || '';
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

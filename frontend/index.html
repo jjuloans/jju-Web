@@ -1,0 +1,3019 @@
+<!doctype html>
+<html lang="mr">
+  <head>
+    <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self';" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Jalgaon Jamod Urban Bank v24</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <link rel="stylesheet" href="css/app.css" />
+  <style>
+    @media (max-width: 700px) {
+      /* ── Hide header on mobile ── */
+      .header { display:none !important; }
+
+      /* ── fd-acc-hint: desktop puts it in col 2 only; mobile resets to full width ── */
+      .fd-acc-hint-wrap { grid-column: 1 / -1 !important; }
+
+      /* ── Layout ── */
+      #tx-layout-wrap { flex-direction: column !important; }
+      .tx-sidebar { width:100% !important; max-width:100% !important; min-width:0 !important; border-right:none !important; border-bottom:1.5px solid #e0e0e0; }
+      .form-area { display:none !important; }
+      #tx-layout-wrap.mob-form-open .tx-sidebar { display:none !important; }
+      #tx-layout-wrap.mob-form-open .form-area { display:block !important; width:100% !important; }
+      #tx-layout-wrap.mob-form-open .mob-back-btn { display:inline-flex !important; }
+      .tx-scroll { max-height:42vh !important; }
+      .sc-row-grid { grid-template-columns:1fr !important; }
+
+      /* ── Form field grid — force single column on mobile ── */
+      .field-grid, [style*="grid-template-columns: 1fr 1fr"],
+      [style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* ── Ornament chip grid — 2 cols on mobile, never overflow ── */
+      #orn-chip-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 5px !important;
+      }
+
+      /* ── Ornament table ── */
+      #orn-items-tbody tr { display:grid; grid-template-columns:1fr 60px 72px 38px; gap:5px; margin-bottom:8px; align-items:center; border:none !important; }
+      #orn-items-tbody td { border:none !important; padding:0 !important; }
+
+      /* ── Photo boxes — fit within screen ── */
+      .photo-box { min-height:140px !important; max-height:200px !important; }
+      .photo-box img { width:100% !important; height:180px !important; object-fit:cover !important; }
+
+      /* ── Action bar buttons — comfortable tap targets ── */
+      .action-bar { flex-wrap:wrap; gap:8px !important; justify-content:flex-start !important; padding:10px 0 !important; }
+      .action-bar .btn { flex:0 0 auto !important; width:auto !important; min-width:100px !important; max-width:160px !important; padding:11px 16px !important; font-size:13px !important; border-radius:12px !important; min-height:44px !important; }
+
+      /* ── Form inputs — prevent iOS zoom, comfortable touch ── */
+      input[type="text"], input[type="number"], input[type="date"],
+      input[type="tel"], input[type="email"], select, textarea {
+        font-size:16px !important; padding:10px 12px !important; min-height:44px !important; border-radius:10px !important;
+      }
+
+      /* ── Tables and nav — horizontal scroll ── */
+      .table-wrap, .ldg-table-wrap { overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+      .nav { overflow-x:auto !important; white-space:nowrap !important; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+      .nav::-webkit-scrollbar { display:none; }
+
+      /* ── Spacing ── */
+      .page { padding:0 !important; }
+      .pghdr { flex-wrap:wrap; gap:8px; }
+
+      /* ── Customer search dropdown ── */
+      .cust-search-wrap { position:relative; width:100%; }
+      .cust-search-dropdown { position:absolute !important; top:100% !important; left:0 !important; right:0 !important; width:100% !important; max-height:240px !important; overflow-y:auto !important; z-index:9999 !important; background:#fff !important; border:1.5px solid #c0d8c0 !important; border-radius:12px !important; box-shadow:0 8px 28px rgba(0,0,0,0.18) !important; }
+      .cust-search-item { padding:12px 14px !important; font-size:14px !important; min-height:44px !important; display:flex; flex-direction:column; justify-content:center; border-bottom:1px solid #f0f0f0; cursor:pointer; }
+      .cust-search-item:active { background:#f0f7f0; }
+      .csi-name { font-weight:700; display:block; font-size:14px; }
+      .csi-meta { font-size:11px; color:#888; display:block; margin-top:2px; }
+    }
+  </style>
+  </head>
+
+  <body>
+    <!-- ── LOGIN SCREEN ─────────────────────────────────────────── -->
+    <div
+      id="app-login-screen"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: linear-gradient(160deg, #1a3d2b, #2d6a4f, #40916c);
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 16px;
+          padding: 40px;
+          width: 400px;
+          max-width: 95vw;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+          font-family: Arial, sans-serif;
+        "
+      >
+        <div style="text-align: center; margin-bottom: 32px">
+          <div style="font-size: 40px; margin-bottom: 10px">🏦</div>
+          <div style="font-size: 22px; font-weight: 700; color: #1a2e1a">
+            JJU Bank
+          </div>
+          <div style="font-size: 13px; color: #6b778c; margin-top: 4px">
+            Sign in to continue
+          </div>
+        </div>
+        <div id="app-login-msg"></div>
+        <div style="margin-bottom: 16px">
+          <label
+            style="
+              display: block;
+              font-size: 12px;
+              font-weight: 600;
+              color: #2d4a30;
+              margin-bottom: 6px;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >Username</label
+          >
+          <input
+            id="app-login-username"
+            type="text"
+            placeholder="Enter username"
+            onkeydown="if (event.key === 'Enter') appDoLogin();"
+            style="
+              width: 100%;
+              padding: 10px 12px;
+              border-radius: 6px;
+              border: 1.5px solid #d4e4d4;
+              font-size: 16px;
+              box-sizing: border-box;
+              outline: none;
+            "
+          />
+        </div>
+        <div style="margin-bottom: 24px">
+          <label
+            style="
+              display: block;
+              font-size: 12px;
+              font-weight: 600;
+              color: #2d4a30;
+              margin-bottom: 6px;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+            "
+            >Password</label
+          >
+          <input
+            id="app-login-password"
+            type="password"
+            placeholder="Enter password"
+            onkeydown="if (event.key === 'Enter') appDoLogin();"
+            style="
+              width: 100%;
+              padding: 10px 12px;
+              border-radius: 6px;
+              border: 1.5px solid #d4e4d4;
+              font-size: 16px;
+              box-sizing: border-box;
+              outline: none;
+            "
+          />
+        </div>
+        <button
+          id="app-login-btn"
+          onclick="appDoLogin()"
+          style="
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            background: linear-gradient(135deg, #2d6a4f, #40916c);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >
+          Sign In →
+        </button>
+      </div>
+    </div>
+    <!-- ── END LOGIN SCREEN ──────────────────────────────────────── -->
+
+    <div id="app-main-wrap" style="display: none">
+      <div class="header">
+        <div class="logo">JJU</div>
+        <div class="htitle">
+          <h1>Jalgaon Jamod Urban Bank</h1>
+          <p>
+            जळगाव जामोद अर्बन बँक
+            <span class="conn linking" id="conn">● …</span>
+          </p>
+        </div>
+        <div
+          class="hactions"
+          style="display: flex; gap: 6px; flex-shrink: 0; align-items: center"
+        >
+          <!-- ── GLOBAL DATE SELECTOR ── -->
+          <div class="hdate-wrap">
+            <span id="hdate-badge" class="hdate-badge" style="display: none"
+              >📅 Past</span
+            >
+            <input
+              type="date"
+              id="global-date"
+              class="hdate-inp"
+              onchange="onGlobalDateChange()"
+              title="Select date — all pages will show data for this date"
+            />
+            <button
+              class="hbtn hbtn-today"
+              onclick="setTodayDate()"
+              title="Jump to today"
+            >
+              Today
+            </button>
+          </div>
+          <button
+            id="close-day-btn"
+            class="hbtn hbtn-close"
+            onclick="openCloseDayModal()"
+            style="display: none; align-items: center; gap: 5px"
+            title="Sync &amp; close this day to database"
+          >
+            <span>🔒</span><span>Close Day</span>
+          </button>
+          <button class="hbtn hbtn-new" onclick="showPage('new')">✚ New</button>
+          <button class="hbtn hbtn-db" onclick="showPage('database')">
+            🗄️ DB
+          </button>
+          <button
+            class="hbtn hbtn-admin"
+            onclick="window.open('/admin.html', '_blank')"
+            title="Open Admin Dashboard"
+          >
+            🔐 Admin
+          </button>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div
+          class="nav-item active"
+          data-page="home"
+          onclick="showPage('home')"
+        >
+          📊 Dashboard
+        </div>
+        <div class="nav-item" data-page="ledger" onclick="showPage('ledger')">
+          📋 Transaction Ledger
+        </div>
+        <div class="nav-item" data-page="new" onclick="showPage('new')">
+          ✚ New Transaction
+        </div>
+        <div
+          class="nav-item"
+          data-page="database"
+          onclick="showPage('database')"
+        >
+          🗄️ Database
+        </div>
+        <div
+          class="nav-item"
+          data-page="cashbook"
+          onclick="gotoCashbookTab()"
+        >
+          📒 Cash Book
+        </div>
+        <div class="nav-item" data-page="dayend" onclick="showPage('dayend')">
+          📊 Day-End Summary
+        </div>
+        <div class="nav-item" data-page="mis" onclick="showPage('mis')">
+          💳 Bulk MIS
+        </div>
+        <div class="nav-item" data-page="import" onclick="showPage('import')">
+          📤 Import Data
+        </div>
+      </div>
+
+      <div class="bnav">
+        <div class="bnav-row">
+          <button
+            class="bnav-btn active"
+            data-page="home"
+            onclick="showPage('home')"
+          >
+            <span class="bnav-icon">📊</span>
+            <span class="bnav-lbl">Home</span>
+          </button>
+          <button
+            class="bnav-btn"
+            data-page="ledger"
+            onclick="showPage('ledger')"
+          >
+            <span class="bnav-icon">📋</span>
+            <span class="bnav-lbl">Ledger</span>
+          </button>
+          <button class="bnav-btn" data-page="new" onclick="showPage('new')">
+            <span class="bnav-icon">✚</span>
+            <span class="bnav-lbl">New</span>
+          </button>
+          <button
+            class="bnav-btn"
+            data-page="database"
+            onclick="showPage('database')"
+          >
+            <span class="bnav-icon">🗄️</span>
+            <span class="bnav-lbl">DB</span>
+          </button>
+          <button
+            class="bnav-btn"
+            data-page="cashbook"
+            onclick="gotoCashbookTab()"
+          >
+            <span class="bnav-icon">📒</span>
+            <span class="bnav-lbl">Cash</span>
+          </button>
+          <button
+            class="bnav-btn"
+            data-page="import"
+            onclick="showPage('import')"
+          >
+            <span class="bnav-icon">📤</span>
+            <span class="bnav-lbl">Import</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="main">
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-home">
+
+          <!-- HERO BANNER -->
+          <div class="dash-banner" style="position:relative;overflow:hidden;">
+            <div>
+              <h2 style="font-size: 15pt">
+                जळगाव जामोद अर्बन को-ऑप. क्रेडीट सोसा. 🏦
+              </h2>
+              <p id="dash-date" style="font-size: 10pt; opacity: 0.85">
+                Loading...
+              </p>
+            </div>
+            <button class="dash-new-btn" onclick="showPage('new')">
+              ✚ New Transaction
+            </button>
+          </div>
+
+          <!-- TOP KPI ROW — all IDs preserved exactly -->
+          <div
+            class="stats-grid"
+            id="kpi-row"
+            style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 10px;"
+          >
+            <div class="stat-card" style="border-left: 4px solid #f39c12; position:relative;">
+              <div class="stat-icon" style="background: #fef3cd">📁</div>
+              <div>
+                <div class="stat-val" style="color: #f39c12" id="s-total">—</div>
+                <div class="stat-lbl">Total Records</div>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #27ae60; position:relative;">
+              <div class="stat-icon" style="background: #d5f5e3">📅</div>
+              <div>
+                <div class="stat-val" style="color: #27ae60" id="s-today">—</div>
+                <div class="stat-lbl">Today's Entries</div>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #e74c3c; position:relative;">
+              <div class="stat-icon" style="background: #fadbd8">🥇</div>
+              <div>
+                <div class="stat-val" style="color: #e74c3c" id="s-active-gold">—</div>
+                <div class="stat-lbl">Active Gold Loans</div>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #8e44ad; position:relative;">
+              <div class="stat-icon" style="background: #e8daef">📈</div>
+              <div>
+                <div class="stat-val" style="color: #8e44ad" id="s-active-fd">—</div>
+                <div class="stat-lbl">Active FDs</div>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #2980b9; position:relative;">
+              <div class="stat-icon" style="background: #d6eaf8">💰</div>
+              <div>
+                <div class="stat-val" style="color: #2980b9; font-size: 12pt" id="s-gold-amt">—</div>
+                <div class="stat-lbl">Total Gold Loan ₹</div>
+              </div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid #16a085; position:relative;">
+              <div class="stat-icon" style="background: #d1f2eb">🏦</div>
+              <div>
+                <div class="stat-val" style="color: #16a085; font-size: 12pt" id="s-fd-amt">—</div>
+                <div class="stat-lbl">Total FD Deposits ₹</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PDF HISTORY PANEL -->
+          <div
+            id="dash-pdf-panel"
+            style="display:none; background:#f0f4ff; border:1.5px solid #2980b9; border-radius:10px; padding:10px 14px; margin-bottom:10px;"
+          >
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-weight:800; font-size:10.5pt; color:#1a3a5c;">🖨️ Recently Generated PDFs</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button onclick="clearPdfHistory()" style="background:none;border:1px solid #aaa;border-radius:5px;font-size:8.5pt;cursor:pointer;color:#666;padding:2px 8px;">🗑 Clear</button>
+                <button onclick="document.getElementById('dash-pdf-panel').style.display='none'" style="background:none;border:none;font-size:14px;cursor:pointer;color:#999;padding:0 4px;">✕</button>
+              </div>
+            </div>
+            <div id="dash-pdf-list" style="font-size:9pt; max-height:220px; overflow-y:auto;"></div>
+          </div>
+
+          <!-- ROW 2: Today Activity + Quick Actions -->
+          <div
+            id="today-row"
+            style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;"
+          >
+            <!-- Today's Gold Loan Activity -->
+            <div class="dash-card" style="padding:10px 14px;">
+              <div class="dcard-title" style="margin-bottom:6px;">📅 Today's Gold Loan Activity</div>
+              <div style="display:flex; gap:10px; margin-top:6px;">
+                <div style="flex:1; background:#d5f5e3; border-radius:8px; padding:10px; text-align:center;">
+                  <div style="font-size:22pt; font-weight:900; color:#1e8449;" id="s-today-opened">—</div>
+                  <div style="font-size:9pt; font-weight:700; color:#1e8449;">🆕 Opened Today</div>
+                </div>
+                <div style="flex:1; background:#fadbd8; border-radius:8px; padding:10px; text-align:center;">
+                  <div style="font-size:22pt; font-weight:900; color:#c0392b;" id="s-today-closed">—</div>
+                  <div style="font-size:9pt; font-weight:700; color:#c0392b;">🔒 Closed Today</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gold Loan Status -->
+            <div class="dash-card" style="padding:10px 14px;">
+              <div class="dcard-title" style="margin-bottom:6px;">📊 Gold Loan Status</div>
+              <div style="display:flex; gap:10px; margin-top:6px;">
+                <div style="flex:1; background:#d6eaf8; border-radius:8px; padding:10px; text-align:center;">
+                  <div style="font-size:22pt; font-weight:900; color:#1a5276;" id="s-active-gold2" data-sync-from="s-active-gold">—</div>
+                  <div style="font-size:9pt; font-weight:700; color:#1a5276;">🟢 Active</div>
+                </div>
+                <div style="flex:1; background:#f2f3f4; border-radius:8px; padding:10px; text-align:center;">
+                  <div style="font-size:22pt; font-weight:900; color:#555;" id="s-closed-gold">—</div>
+                  <div style="font-size:9pt; font-weight:700; color:#555;">🔒 Closed</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions — expanded with more useful shortcuts -->
+            <div class="dash-card" style="padding:10px 14px;">
+              <div class="dcard-title" style="margin-bottom:6px;">⚡ Quick Actions</div>
+              <div class="qa-grid" style="grid-template-columns:1fr 1fr; gap:6px;">
+                <button class="qa-btn" style="background:#fef9c3;color:#b7791f;font-size:9.5pt;" onclick="quickStart('Gold Loan')">
+                  <span class="qa-icon">🥇</span>New Gold Loan
+                </button>
+                <button class="qa-btn" style="background:#d1fae5;color:#065f46;font-size:9.5pt;" onclick="showPage('new')">
+                  <span class="qa-icon">🔒</span>Close Loan
+                </button>
+                <button class="qa-btn" style="background:#dbeafe;color:#1e40af;font-size:9.5pt;" onclick="quickStart('New FD')">
+                  <span class="qa-icon">📈</span>New FD
+                </button>
+                <button class="qa-btn" style="background:#ede9fe;color:#5b21b6;font-size:9.5pt;" onclick="quickStart('Naammatr Sabhasad Account')">
+                  <span class="qa-icon">👥</span>New Member
+                </button>
+                <button class="qa-btn" style="background:#fce7f3;color:#9d174d;font-size:9.5pt;" onclick="gotoCashbookTab()">
+                  <span class="qa-icon">📒</span>Cash Book
+                </button>
+                <button class="qa-btn" style="background:#f0fdf4;color:#166534;font-size:9.5pt;" onclick="showPage('database')">
+                  <span class="qa-icon">🔍</span>Search DB
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROW 3: Data Integrity + Recently Closed + Section Summary -->
+          <div
+            class="dash-grid"
+            id="mid-row"
+            style="grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;"
+          >
+            <!-- Data Integrity -->
+            <div class="dash-card" style="padding:10px 14px;">
+              <div class="dcard-title" style="color:#c0392b; margin-bottom:6px;">⚠️ Data Integrity Check</div>
+              <div id="data-errors-list" style="font-size:9.5pt;">
+                <div style="color:#aaa; font-size:9pt;">Checking...</div>
+              </div>
+              <button
+                onclick="showPage('database')"
+                style="margin-top:8px;width:100%;padding:6px;background:#fadbd8;border:none;border-radius:6px;font-family:Nunito,sans-serif;font-size:10px;font-weight:800;color:#c0392b;cursor:pointer;"
+              >Fix in Database →</button>
+            </div>
+
+            <!-- Recently Closed Loans -->
+            <div class="dash-card" style="padding:10px 14px;">
+              <div class="dcard-title" style="margin-bottom:6px;">🔒 Recently Closed Loans</div>
+              <div id="recent-closed-list" style="font-size:9pt;">
+                <div style="color:#aaa;">Loading...</div>
+              </div>
+            </div>
+
+            <!-- Section Summary (moved from bottom for faster access) -->
+            <div class="dash-card" style="padding:10px 14px;">
+              <div class="dcard-title" style="margin-bottom:8px;">📋 Section Summary</div>
+              <div id="section-summary" style="font-size:9.5pt;">
+                <div style="color:#aaa;">Loading...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROW 4: Recent Records + Section Breakdown (full width) -->
+          <div class="dash-grid" style="gap:8px; margin-bottom:10px;">
+            <div class="dash-card">
+              <div class="dcard-title">🕐 Recent Records</div>
+              <div id="recent-list">
+                <div class="empty-st">
+                  <div class="ei">⏳</div>
+                  <p>Loading…</p>
+                </div>
+              </div>
+              <button
+                onclick="showPage('database')"
+                style="margin-top:10px;width:100%;padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;font-family:Nunito,sans-serif;font-size:10px;font-weight:700;color:var(--textl);cursor:pointer;"
+              >View All →</button>
+            </div>
+            <div class="dash-card">
+              <div class="dcard-title">📊 Records by Section</div>
+              <div id="tx-breakdown">
+                <div style="font-size:10px;color:var(--textl);">Loading…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GOOGLE SHEETS SYNC CARD -->
+          <div style="margin-top:10px;">
+            <div class="dash-card" style="padding:12px 16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <div class="dcard-title" style="margin-bottom:3px;">🔄 Google Sheets Sync</div>
+                  <div style="font-size:9pt;color:var(--textl);">
+                    Nightly auto-sync at <strong>11:00 PM IST</strong> &nbsp;|&nbsp; Last sync:
+                    <span id="sheets-last-sync" style="color:#1a5276;font-weight:700;">checking…</span>
+                  </div>
+                </div>
+                <button
+                  id="sheets-sync-btn"
+                  onclick="triggerSheetsSync()"
+                  style="background:#1a5276;color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:11px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif;display:flex;align-items:center;gap:6px;white-space:nowrap;"
+                >
+                  <span id="sheets-sync-icon">🔄</span> Sync Now
+                </button>
+              </div>
+              <div id="sheets-sync-status" style="margin-top:8px;font-size:9pt;display:none;"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- NEW TRANSACTION -->
+        <div class="page" id="page-new">
+          <div class="pghdr">
+            <div class="pghdr-icon" style="background: var(--mint)">✚</div>
+            <div>
+              <h2 style="color: var(--mint-a)">New Transaction</h2>
+              <p>
+                Select type(s) then fill the form to save &amp; generate PDF
+              </p>
+            </div>
+          </div>
+          <div class="tx-layout" id="tx-layout-wrap">
+            <!-- ── Sidebar: type selector ── -->
+            <div class="tx-sidebar">
+              <div class="tx-head">
+                <h3>Transaction Types</h3>
+                <p>Choose one or more, then tap Fill Form →</p>
+              </div>
+              <!-- ctype selector — Regular (Sub-Loan option removed) -->
+              <div style="display:flex;gap:6px;margin-bottom:8px;padding:0 2px;">
+                <div id="btn-reg"
+                  class="ctype-btn reg-on"
+                  onclick="setCtype('regular')"
+                  style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #c8e6c9;background:#eafaf1;color:#1e8449;font-size:11px;font-weight:700;cursor:pointer;text-align:center;user-select:none;">
+                  ✔ Regular
+                </div>
+              </div>
+              <div class="tx-tools">
+                <button class="tx-tool all" onclick="selAll()">✔ All</button>
+                <button class="tx-tool none" onclick="selNone()">✕ None</button>
+              </div>
+              <div class="tx-scroll" id="tx-list"></div>
+              <div class="tx-foot">
+                <div class="tx-cnt"><b id="sel-count">0</b> selected</div>
+                <button class="go-btn" id="go-btn" disabled onclick="onGoBtn()">
+                  Fill Form →
+                </button>
+              </div>
+            </div>
+
+            <!-- ── Form area ── -->
+            <div class="form-area">
+              <!-- CB preview panel (hidden) -->
+              <div
+                class="cb-preview-panel"
+                id="cb-preview-panel"
+                style="display: none"
+              >
+                <div class="cb-preview-title">
+                  📒 Cashbook entries that will be auto-created
+                </div>
+                <div id="cb-preview-rows"></div>
+              </div>
+
+              <!-- Empty state (desktop only) -->
+              <div class="form-empty" id="form-empty">
+                <div class="ei">📋</div>
+                <h3>Select a Transaction Type</h3>
+                <p>
+                  Pick one or more types from the left panel, then tap
+                  <strong>Fill Form →</strong> to generate the customer entry
+                  form.
+                </p>
+              </div>
+
+              <!-- Generated form card -->
+              <div class="form-card" id="form-card"></div>
+
+              <!-- Sticky action bar -->
+              <div class="action-bar" id="action-bar">
+                <button class="btn mob-back-btn" onclick="resetAll()" style="background:#f0f0f0;color:#555;border:1.5px solid #ccc;display:none;">
+                  ← Back
+                </button>
+                <button class="btn btn-main" onclick="saveAndPDF()">
+                  💾 Save &amp; PDF
+                </button>
+                <button class="btn btn-reset" onclick="resetAll()">
+                  ↺ Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATABASE -->
+        <div class="page" id="page-database">
+          <div class="pghdr">
+            <div class="pghdr-icon" style="background: var(--lav)">🗄️</div>
+            <div>
+              <h2 style="color: var(--lav-a)">Database</h2>
+              <p>Search, edit and manage all customer records</p>
+            </div>
+            <div
+              id="db-date-badge"
+              style="
+                margin-left: auto;
+                background: var(--lav);
+                color: var(--lav-a);
+                border-radius: 8px;
+                padding: 5px 13px;
+                font-size: 11px;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              "
+            >
+              📅 <span id="db-date-label">Today</span>
+            </div>
+          </div>
+          <div class="db-top">
+            <input
+              class="db-q"
+              id="db-q"
+              aria-label="Search records by name, Aadhar or mobile"
+              type="text"
+              placeholder="🔍 Search name, Aadhar, mobile…"
+              oninput="dbSearch()"
+            />
+            <select class="db-sel" id="db-sect" onchange="loadDB()">
+              <option value="">All Sections</option>
+              <option value="gold">🥇 Gold Loan</option>
+              <option value="fd">📈 Fixed Deposit</option>
+              <option value="membership">🪪 Membership</option>
+              <option value="od">💳 FD-OD Loan</option>
+              <option value="saving">💰 Saving</option>
+              <option value="current">🏦 Current</option>
+              <option value="shares">📊 Shares</option>
+              <option value="bank">🏧 Bank / Expense</option>
+              <option value="office">🏢 Office</option>
+            </select>
+            <select class="db-sel" id="db-ctype" onchange="loadDB()">
+              <option value="">All Types</option>
+              <option value="regular">Regular</option>
+                          </select>
+            <button
+              class="btn"
+              style="background: var(--sky-a); color: #fff"
+              onclick="exportCSV()"
+            >
+              📥 CSV
+            </button>
+          </div>
+          <!-- Transaction Type Tabs -->
+          <div
+            id="db-tx-tabs"
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5px;
+              margin: 8px 0 6px 0;
+              padding-bottom: 6px;
+              border-bottom: 2px solid var(--border);
+            "
+          >
+            <button
+              class="db-tx-tab active"
+              data-tx=""
+              onclick="setDbTxTab(this, '', '')"
+            >
+              All
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="gold"
+              onclick="setDbTxTab(this, 'gold', '')"
+            >
+              🥇 Gold Loan
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="fd"
+              onclick="setDbTxTab(this, 'fd', '')"
+            >
+              📈 Fixed Deposit
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="od"
+              onclick="setDbTxTab(this, 'od', '')"
+            >
+              💳 FD-OD Loan
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="saving"
+              onclick="setDbTxTab(this, 'saving', '')"
+            >
+              💰 Saving Account
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="saving-dep"
+              onclick="setDbTxTab(this, 'saving', 'Saving Deposit')"
+            >
+              💰 Saving Deposit
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="saving-with"
+              onclick="setDbTxTab(this, 'saving', 'Saving Withdrawal')"
+            >
+              💰 Saving Withdrawal
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="current"
+              onclick="setDbTxTab(this, 'current', '')"
+            >
+              🏦 Current Account
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="membership"
+              onclick="setDbTxTab(this, 'membership', '')"
+            >
+              🪪 Membership
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="bank"
+              onclick="setDbTxTab(this, 'bank', '')"
+            >
+              🏧 Bank / Expense
+            </button>
+            <button
+              class="db-tx-tab"
+              data-tx="office"
+              onclick="setDbTxTab(this, 'office', '')"
+            >
+              🏢 Office
+            </button>
+            <span style="flex: 1"></span>
+            <button
+              class="db-tx-tab db-status-tab active"
+              data-status=""
+              onclick="setDbStatus(this, '')"
+            >
+              All Status
+            </button>
+            <button
+              class="db-tx-tab db-status-tab"
+              data-status="active"
+              onclick="setDbStatus(this, 'active')"
+            >
+              🔓 Active
+            </button>
+            <button
+              class="db-tx-tab db-status-tab"
+              data-status="closed"
+              onclick="setDbStatus(this, 'closed')"
+            >
+              🔒 Closed
+            </button>
+          </div>
+
+          <div
+            id="db-pages"
+            style="
+              display: flex;
+              gap: 7px;
+              align-items: center;
+              flex-wrap: wrap;
+              margin-bottom: 9px;
+            "
+          ></div>
+          <div class="db-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Aadhar</th>
+                  <th>Mobile</th>
+                  <th id="db-col-acct">Account No</th>
+                  <th id="db-col-extra">Details</th>
+                  <th>Tx Types</th>
+                  <th class="db-actions-col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="db-body">
+                <tr>
+                  <td colspan="9">
+                    <div class="empty-st">
+                      <div class="ei">⏳</div>
+                      <p>Loading…</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TRANSACTION LEDGER (Main Sheet) -->
+        <div class="page" id="page-ledger">
+          <div class="pghdr">
+            <div class="pghdr-icon" style="background: var(--amber)">📋</div>
+            <div>
+              <h2 style="color: var(--amber-a)">Transaction Ledger</h2>
+              <p>
+                Master data entry sheet — data flows automatically to CashBook,
+                Voucher, and Interest tabs below
+              </p>
+            </div>
+          </div>
+
+          <!-- Sub-tabs -->
+          <div
+            style="display: flex; gap: 3px; margin-bottom: 0; flex-wrap: wrap"
+          >
+            <button
+              class="ltab active"
+              id="ltab-main"
+              onclick="switchLedgerTab('main')"
+            >
+              📋 Main Data
+            </button>
+            <button
+              class="ltab"
+              id="ltab-transfer"
+              onclick="switchLedgerTab('transfer')"
+            >
+              🔄 Transfer Entries
+            </button>
+            <button
+              class="ltab"
+              id="ltab-cashbook"
+              onclick="switchLedgerTab('cashbook')"
+            >
+              💵 Cash Entries
+            </button>
+            <button
+              class="ltab"
+              id="ltab-intgl"
+              onclick="switchLedgerTab('intgl')"
+            >
+              🥇 Int Recv GL-83
+            </button>
+            <button
+              class="ltab"
+              id="ltab-intfdod"
+              onclick="switchLedgerTab('intfdod')"
+            >
+              📈 Int Recv FD-OD
+            </button>
+            <button
+              class="ltab"
+              id="ltab-banktrf"
+              onclick="switchLedgerTab('banktrf')"
+            >
+              🏦 Bank TRF
+            </button>
+            <button
+              class="ltab"
+              id="ltab-template"
+              onclick="switchLedgerTab('template')"
+            >
+              🧾 Template Data
+            </button>
+            <button
+              class="ltab"
+              id="ltab-journal"
+              onclick="switchLedgerTab('journal')"
+            >
+              📒 Journal Templates
+            </button>
+            <button
+              class="ltab"
+              id="ltab-recycle"
+              onclick="switchLedgerTab('recycle')"
+              style="color: #c0392b"
+            >
+              🗑️ Recycle Bin
+            </button>
+          </div>
+
+          <!-- Control bar -->
+          <div
+            class="ltab-panel"
+            style="border-radius: 0 11px 11px 11px; padding: 10px 12px"
+          >
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                flex-wrap: wrap;
+                margin-bottom: 10px;
+              "
+            >
+              <input
+                type="date"
+                id="ldg-date"
+                aria-label="Ledger date"
+                style="
+                  padding: 8px 10px;
+                  border-radius: 7px;
+                  border: 1.5px solid var(--border);
+                  font-family: &quot;Nunito&quot;, sans-serif;
+                  font-size: 12px;
+                  background: #fff;
+                  outline: none;
+                "
+              />
+              <input
+                type="text"
+                id="ldg-name"
+                aria-label="Filter ledger by name"
+                placeholder="🔍 Filter by name…"
+                oninput="renderLedger()"
+                style="
+                  padding: 8px 10px;
+                  border-radius: 7px;
+                  border: 1.5px solid var(--border);
+                  font-family: &quot;Nunito&quot;, sans-serif;
+                  font-size: 12px;
+                  background: #fff;
+                  outline: none;
+                  min-width: 160px;
+                "
+              />
+              <button
+                class="btn"
+                style="
+                  background: var(--amber-a);
+                  color: #fff;
+                  font-weight: 800;
+                "
+                onclick="loadLedger()"
+              >
+                🔄 Load
+              </button>
+              <button
+                class="btn"
+                style="background: var(--mint-a); color: #fff"
+                onclick="exportLedgerExcel()"
+              >
+                📥 Export Excel
+              </button>
+              <span
+                id="ldg-count"
+                style="font-size: 10px; color: var(--textl)"
+              ></span>
+            </div>
+
+            <!-- MAIN DATA TAB -->
+            <div id="ltab-panel-main">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 7px;
+                  flex-wrap: wrap;
+                  gap: 6px;
+                "
+              >
+                <div>
+                  <p
+                    style="
+                      font-size: 10px;
+                      color: var(--textl);
+                      margin: 0 0 3px;
+                    "
+                  >
+                    📌 <strong>Master Sheet</strong> — Parent rows show Task;
+                    child rows show individual accounting entries. All fields
+                    are editable inline — click any field to edit. Changes
+                    auto-save and sync to Cash Book &amp; other tabs instantly.
+                    <span
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-left: 6px;
+                        font-size: 8.5pt;
+                      "
+                    >
+                      <span
+                        style="
+                          background: #fffbe6;
+                          border: 1px solid #f6c90e;
+                          border-radius: 3px;
+                          padding: 1px 6px;
+                          color: #7a5800;
+                        "
+                        >Yellow = empty field</span
+                      >
+                      <span
+                        style="
+                          background: #d4f5e9;
+                          border: 1px solid #2a7a50;
+                          border-radius: 3px;
+                          padding: 1px 6px;
+                          color: #2a7a50;
+                        "
+                        >&#10003; = saved</span
+                      >
+                    </span>
+                  </p>
+                  <p style="font-size: 9px; color: #555; margin: 0">
+                    ✏️
+                    <span
+                      style="
+                        background: #f0f7ff;
+                        border: 1.5px solid #b8d4f0;
+                        border-radius: 3px;
+                        padding: 1px 5px;
+                        font-weight: 700;
+                        color: #1a3a5c;
+                      "
+                      >Blue fields</span
+                    >
+                    are editable — click, type, then press
+                    <kbd
+                      style="
+                        background: #f5f5f5;
+                        border: 1px solid #ccc;
+                        border-radius: 3px;
+                        padding: 1px 4px;
+                        font-size: 8px;
+                      "
+                      >Tab</kbd
+                    >
+                    or
+                    <kbd
+                      style="
+                        background: #f5f5f5;
+                        border: 1px solid #ccc;
+                        border-radius: 3px;
+                        padding: 1px 4px;
+                        font-size: 8px;
+                      "
+                      >Enter</kbd
+                    >
+                    to save. Changes sync to Cash Book &amp; other tabs
+                    instantly.
+                  </p>
+                </div>
+                <button
+                  onclick="ldgAddManualRow()"
+                  style="
+                    background: var(--sky-a);
+                    color: #fff;
+                    border: none;
+                    border-radius: 7px;
+                    padding: 9px 16px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: 700;
+                    font-family: &quot;Nunito&quot;, sans-serif;
+                    min-height: 36px;
+                  "
+                >
+                  + Add Row
+                </button>
+              </div>
+              <div
+                id="ldg-unsaved-banner"
+                style="
+                  display: none;
+                  background: #fffbe6;
+                  border: 1.5px solid #f6c90e;
+                  border-radius: 7px;
+                  padding: 8px 14px;
+                  margin-bottom: 10px;
+                  font-size: 11px;
+                  color: #7a5800;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                ⚠️ <strong>Entries not yet saved to database.</strong> Click
+                <strong>Generate Cash Book</strong> or
+                <strong>Print / PDF</strong> to save and generate.
+              </div>
+              <div style="overflow-x: auto; -webkit-overflow-scrolling: touch">
+                <table
+                  id="ldg-main-table"
+                  style="
+                    min-width: 1100px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:55px">
+                    <col style="width:160px">
+                    <col style="width:200px">
+                    <col style="width:100px">
+                    <col style="width:110px">
+                    <col style="width:110px">
+                    <col style="width:100px">
+                    <col style="width:90px">
+                    <col style="width:115px">
+                    <col style="width:60px">
+                  </colgroup>
+                  <thead>
+                    <tr
+                      style="
+                        background: #3f3f9f;
+                        color: #fff;
+                        position: sticky;
+                        top: 0;
+                        z-index: 3;
+                      "
+                    >
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          white-space: nowrap;
+                          min-width: 55px;
+                        "
+                      >
+                        Trans No
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 140px;
+                          text-align: left;
+                        "
+                      >
+                        Name
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 180px;
+                          text-align: left;
+                        "
+                      >
+                        Account Type
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 90px;
+                          text-align: center;
+                        "
+                      >
+                        Tx Type
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 90px;
+                          text-align: left;
+                        "
+                      >
+                        Account No
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 90px;
+                          text-align: right;
+                        "
+                      >
+                        Amount (₹)
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 90px;
+                          text-align: center;
+                        "
+                      >
+                        Mode
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 75px;
+                          text-align: center;
+                        "
+                      >
+                        Scroll No
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 100px;
+                          text-align: center;
+                        "
+                      >
+                        Loan Date
+                      </th>
+                      <th
+                        style="
+                          padding: 6px 7px;
+                          min-width: 60px;
+                          text-align: center;
+                        "
+                      >
+                        💾
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-main-body">
+                    <tr>
+                      <td
+                        colspan="10"
+                        style="
+                          text-align: center;
+                          padding: 24px;
+                          color: var(--textl);
+                        "
+                      >
+                        Select a date and click 🔄 Load
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TRANSFER ENTRIES TAB -->
+            <div id="ltab-panel-transfer" style="display: none">
+              <p
+                style="font-size: 10px; color: var(--textl); margin-bottom: 7px"
+              >
+                🔄 <strong>Transfer Entries</strong> — Only
+                <strong>Transfer mode</strong> entries. Account No. and Scroll
+                No. can be edited directly in this view.
+              </p>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    min-width: 850px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:45px">
+                    <col style="width:160px">
+                    <col style="width:210px">
+                    <col style="width:100px">
+                    <col style="width:110px">
+                    <col style="width:110px">
+                    <col style="width:70px">
+                    <col style="width:70px">
+                  </colgroup>
+                  <thead>
+                    <tr style="background: #553c9a; color: #fff">
+                      <th style="padding: 6px 8px">#</th>
+                      <th style="padding: 6px 8px; text-align: left">Name</th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Tx Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: right">
+                        Amount (₹)
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Scroll No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Loan Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-trf-body"></tbody>
+                  <tfoot id="ldg-trf-foot"></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- CASH BOOK TAB -->
+            <div id="ltab-panel-cashbook" style="display: none">
+              <p
+                style="font-size: 10px; color: var(--textl); margin-bottom: 7px"
+              >
+                💵 <strong>Cash Book</strong> — Only
+                <strong>Cash mode</strong> entries. Read-only view — edit any
+                row in the <strong>Main Data</strong> tab and it will sync here
+                instantly. Account No. and Scroll No. can also be edited
+                directly in this view.
+              </p>
+
+              <!-- Opening balance + print — this tab is the single place to
+                   check cash book entries and print (see generateCashBookPDFFromLedger). -->
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  flex-wrap: wrap;
+                  margin-bottom: 10px;
+                  padding: 10px 12px;
+                  background: #f8f9fa;
+                  border-radius: 8px;
+                "
+              >
+                <label style="font-size: 10px; font-weight: 700; color: #555">
+                  Opening balance
+                  <input
+                    type="number"
+                    id="cb-opening"
+                    oninput="cbOnOpeningChange()"
+                    style="
+                      display: block;
+                      margin-top: 3px;
+                      width: 130px;
+                      padding: 5px 8px;
+                      border: 1px solid #ccc;
+                      border-radius: 6px;
+                      font-size: 11px;
+                    "
+                  />
+                </label>
+                <button
+                  onclick="ldgLoadPrevClosingAsOpening()"
+                  style="
+                    align-self: flex-end;
+                    padding: 6px 10px;
+                    border: 1px solid #ccc;
+                    border-radius: 6px;
+                    background: #fff;
+                    cursor: pointer;
+                    font-size: 10px;
+                  "
+                >
+                  ↺ Use previous day's closing
+                </button>
+                <div style="font-size: 10px; color: #555; align-self: flex-end">
+                  Closing balance:
+                  <strong id="cb-closing-display" style="font-size: 13px">₹ 0.00</strong>
+                </div>
+                <button
+                  onclick="generateCashBookPDFFromLedger(true)"
+                  title="View the Sahakaar Vibhag T-format रोखवही for this date — same layout as print, no print dialog"
+                  style="
+                    margin-left: auto;
+                    align-self: flex-end;
+                    background: #fff;
+                    color: var(--mint-a);
+                    border: 1.5px solid var(--mint-a);
+                    border-radius: 7px;
+                    padding: 8px 16px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 800;
+                  "
+                >
+                  👁 View Cash Book
+                </button>
+                <button
+                  onclick="generateCashBookPDFFromLedger()"
+                  title="Print Sahakaar Vibhag T-format रोखवही for this date"
+                  style="
+                    align-self: flex-end;
+                    background: var(--mint-a);
+                    color: #fff;
+                    border: none;
+                    border-radius: 7px;
+                    padding: 8px 16px;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 800;
+                  "
+                >
+                  🧾 Print Cash Book
+                </button>
+              </div>
+
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    min-width: 850px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:45px">
+                    <col style="width:160px">
+                    <col style="width:210px">
+                    <col style="width:100px">
+                    <col style="width:110px">
+                    <col style="width:110px">
+                    <col style="width:70px">
+                    <col style="width:70px">
+                  </colgroup>
+                  <thead>
+                    <tr style="background: #2a7a50; color: #fff">
+                      <th style="padding: 6px 8px">#</th>
+                      <th style="padding: 6px 8px; text-align: left">Name</th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Tx Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: right">
+                        Amount (₹)
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Scroll No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Loan Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-cb-body"></tbody>
+                  <tfoot id="ldg-cb-foot"></tfoot>
+                </table>
+              </div>
+
+              <!-- Physical Cash Count — moved here from Day End Summary; matches
+                   the counted total against cbData (opening + today's cash-mode
+                   receipts - payments), same source this tab already displays. -->
+              <div style="background:#fff;border:1px solid #eee;border-radius:9px;overflow:hidden;margin-top:14px;">
+                <div style="background:#6c3483;color:#fff;padding:9px 14px;font-weight:700;font-size:10pt;">💵 Physical Cash Count</div>
+                <div style="padding:10px 12px;">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹500</div>
+                      <input type="number" min="0" value="0" data-denom="500" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹200</div>
+                      <input type="number" min="0" value="0" data-denom="200" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹100</div>
+                      <input type="number" min="0" value="0" data-denom="100" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹50</div>
+                      <input type="number" min="0" value="0" data-denom="50" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹20</div>
+                      <input type="number" min="0" value="0" data-denom="20" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹10</div>
+                      <input type="number" min="0" value="0" data-denom="10" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹5</div>
+                      <input type="number" min="0" value="0" data-denom="5" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹2</div>
+                      <input type="number" min="0" value="0" data-denom="2" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                    <div style="flex:1 1 58px;min-width:58px;text-align:center;">
+                      <div style="font-size:9px;color:#777;font-weight:700;margin-bottom:3px;">₹1</div>
+                      <input type="number" min="0" value="0" data-denom="1" oninput="window._recalcDenom()"
+                        style="width:100%;text-align:center;padding:5px 3px;border:1px solid #ddd;border-radius:5px;font-size:10pt;" class="denom-inp">
+                    </div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid #eee;">
+                    <span style="font-weight:800;color:#6c3483;font-size:10pt;">Physical Cash Total</span>
+                    <span style="font-weight:800;font-size:11pt;color:#6c3483;" id="denom-grand-total">₹ 0</span>
+                  </div>
+                  <div id="denom-match-row" style="display:none;margin-top:8px;padding:7px 10px;border-radius:6px;text-align:center;">
+                    <span id="denom-match-msg" style="font-weight:700;font-size:9.5pt;"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INT RECV GOLD LOAN TAB -->
+            <div id="ltab-panel-intgl" style="display: none">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 7px;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                "
+              >
+                <p style="font-size: 10px; color: var(--textl); margin: 0">
+                  🥇
+                  <strong>Interest Received on Gold Loan — Acc 83</strong>
+                  &nbsp;|&nbsp;
+                  <span style="color: #555"
+                    >Voucher auto-generates when you save a
+                    <strong>Closing - Loan</strong> record.</span
+                  >
+                </p>
+                <button
+                  class="btn"
+                  style="
+                    background: #1a3a5c;
+                    color: #fff;
+                    font-size: 11px;
+                    padding: 5px 14px;
+                  "
+                  onclick="generateGLIntVoucherManual()"
+                >
+                  📄 Generate GL Int Voucher
+                </button>
+              </div>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    min-width: 800px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:45px">
+                    <col style="width:155px">
+                    <col style="width:200px">
+                    <col style="width:100px">
+                    <col style="width:100px">
+                    <col style="width:105px">
+                    <col style="width:60px">
+                    <col style="width:60px">
+                  </colgroup>
+                  <thead>
+                    <tr style="background: #b7791f; color: #fff">
+                      <th style="padding: 6px 8px">#</th>
+                      <th style="padding: 6px 8px; text-align: left">Name</th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Tx Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: right">
+                        Amount (₹)
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Scroll No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Loan Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-intgl-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- INT RECV FD-OD TAB -->
+            <div id="ltab-panel-intfdod" style="display: none">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 7px;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                "
+              >
+                <p style="font-size: 10px; color: var(--textl); margin: 0">
+                  📈
+                  <strong>Interest Received on FD-OD Loan — Acc 277</strong>
+                  &nbsp;|&nbsp;
+                  <span style="color: #555"
+                    >Voucher auto-generates when you save a
+                    <strong>Closing - OD</strong> record.</span
+                  >
+                </p>
+                <button
+                  class="btn"
+                  style="
+                    background: #2b6cb0;
+                    color: #fff;
+                    font-size: 11px;
+                    padding: 5px 14px;
+                  "
+                  onclick="generateFDODIntVoucherManual()"
+                >
+                  📄 Generate FD-OD Int Voucher
+                </button>
+              </div>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    min-width: 800px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:45px">
+                    <col style="width:155px">
+                    <col style="width:200px">
+                    <col style="width:100px">
+                    <col style="width:100px">
+                    <col style="width:105px">
+                    <col style="width:60px">
+                    <col style="width:60px">
+                  </colgroup>
+                  <thead>
+                    <tr style="background: #2b6cb0; color: #fff">
+                      <th style="padding: 6px 8px">#</th>
+                      <th style="padding: 6px 8px; text-align: left">Name</th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Tx Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Account No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: right">
+                        Amount (₹)
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Scroll No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Loan Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-intfdod-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- BANK TRF VOUCHERS TAB -->
+            <div id="ltab-panel-banktrf" style="display: none">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 7px;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                "
+              >
+                <p style="font-size: 10px; color: var(--textl); margin: 0">
+                  🏦 <strong>Bank Transfer Transactions</strong> &nbsp;|&nbsp;
+                  <span style="color: #555"
+                    >All Transfer mode entries involving Bank accounts. Scroll
+                    No. can be edited directly.</span
+                  >
+                </p>
+                <button
+                  class="btn"
+                  style="
+                    background: #1a365d;
+                    color: #fff;
+                    font-size: 11px;
+                    padding: 5px 14px;
+                  "
+                  onclick="generateBankTRFVoucherManual()"
+                >
+                  📄 Generate Bank TRF Vouchers
+                </button>
+              </div>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    min-width: 950px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:45px">
+                    <col style="width:180px">
+                    <col style="width:220px">
+                    <col style="width:100px">
+                    <col style="width:120px">
+                    <col style="width:120px">
+                    <col style="width:80px">
+                    <col style="width:85px">
+                  </colgroup>
+                  <thead>
+                    <tr style="background: #1a365d; color: #fff">
+                      <th style="padding: 6px 8px">#</th>
+                      <th style="padding: 6px 8px; text-align: left">Name</th>
+                      <th style="padding: 6px 8px; text-align: left">
+                        Acc Type (Bank)
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Tx Type
+                      </th>
+                      <th style="padding: 6px 8px; text-align: left">Acc No</th>
+                      <th style="padding: 6px 8px; text-align: right">
+                        Amount (₹)
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        Scroll No
+                      </th>
+                      <th style="padding: 6px 8px; text-align: center">
+                        UPI / RRN
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-banktrf-body"></tbody>
+                  <tfoot id="ldg-banktrf-foot"></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- TEMPLATE DATA TAB -->
+            <div id="ltab-panel-template" style="display: none">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin-bottom: 7px;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                "
+              >
+                <p style="font-size: 10px; color: var(--textl); margin: 0">
+                  🧾 <strong>Template Data</strong> — Aggregated covering
+                  voucher amounts per account. Only rows with non-zero amounts
+                  shown. Also auto-generates the GL-83 Closing Interest
+                  voucher sheet when Gold Loan closings exist for the date.
+                </p>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                  <button
+                    onclick="generateVouchersPDFFromLedger()"
+                    style="
+                      background: #553c9a;
+                      color: #fff;
+                      border: none;
+                      border-radius: 7px;
+                      padding: 6px 14px;
+                      cursor: pointer;
+                      font-size: 11px;
+                      font-weight: 800;
+                      font-family: &quot;Nunito&quot;, sans-serif;
+                    "
+                  >
+                    🏦 Bank Closing — Vouchers PDF
+                  </button>
+                </div>
+              </div>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    min-width: 900px;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    table-layout: fixed;
+                    width: 100%;
+                  "
+                >
+                  <colgroup>
+                    <col style="width:160px">
+                    <col style="width:120px">
+                    <col style="width:75px">
+                    <col style="width:75px">
+                    <col style="width:80px">
+                    <col style="width:95px">
+                    <col style="width:95px">
+                    <col style="width:100px">
+                    <col style="width:100px">
+                  </colgroup>
+                  <thead>
+                    <tr style="background: #553c9a; color: #fff">
+                      <th style="padding: 6px 9px; text-align: left">
+                        Account Type
+                      </th>
+                      <th style="padding: 6px 9px; text-align: left">
+                        Account Number
+                      </th>
+                      <th style="padding: 6px 9px; text-align: center">
+                        Tx Mode
+                      </th>
+                      <th style="padding: 6px 9px; text-align: center">
+                        Tx Type
+                      </th>
+                      <th style="padding: 6px 9px; text-align: center">Date</th>
+                      <th style="padding: 6px 9px; text-align: right">
+                        Transfer (₹)
+                      </th>
+                      <th style="padding: 6px 9px; text-align: right">
+                        Cash (₹)
+                      </th>
+                      <th style="padding: 6px 9px; text-align: left">
+                        Transfer Voucher Name
+                      </th>
+                      <th style="padding: 6px 9px; text-align: left">
+                        Cash Voucher Name
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="ldg-tmpl-body"></tbody>
+                  <tfoot id="ldg-tmpl-foot"></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- JOURNAL TEMPLATES TAB -->
+            <div id="ltab-panel-journal" style="display: none">
+              <div style="margin-bottom: 10px">
+                <p style="font-size: 10px; color: var(--textl); margin: 0">
+                  📒 <strong>Journal Entry Templates</strong> — Reference guide
+                  showing the accounting entries (Debit/Credit) created for each
+                  transaction type.
+                </p>
+              </div>
+              <div
+                id="journal-tmpl-content"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+                  gap: 14px;
+                  padding: 4px 0;
+                "
+              ></div>
+            </div>
+
+            <!-- RECYCLE BIN TAB -->
+            <div id="ltab-panel-recycle" style="display: none">
+              <div
+                style="
+                  margin-bottom: 12px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  flex-wrap: wrap;
+                  gap: 8px;
+                "
+              >
+                <p style="font-size: 10px; color: var(--textl); margin: 0">
+                  🗑️ <strong>Recycle Bin</strong> — Soft-deleted transactions
+                  and cashbook rows. Restore them to Main Data or permanently
+                  delete.
+                </p>
+                <button
+                  onclick="loadRecycleBin()"
+                  style="
+                    background: var(--sky);
+                    color: var(--sky-a);
+                    border: none;
+                    border-radius: 6px;
+                    padding: 5px 12px;
+                    cursor: pointer;
+                    font-size: 10px;
+                    font-weight: 700;
+                  "
+                >
+                  🔄 Refresh
+                </button>
+              </div>
+
+              <!-- Section A: Deleted Transactions (parent records) -->
+              <p
+                style="
+                  font-size: 10px;
+                  font-weight: 800;
+                  color: #c0392b;
+                  margin: 0 0 6px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                📋 Deleted Transactions
+              </p>
+              <div style="overflow-x: auto; margin-bottom: 20px">
+                <table
+                  style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-family: Nunito, sans-serif;
+                  "
+                >
+                  <thead>
+                    <tr style="background: #fde0e8; color: #c0392b">
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: left;
+                          font-size: 9pt;
+                        "
+                      >
+                        NAME
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: left;
+                          font-size: 9pt;
+                        "
+                      >
+                        TRANSACTION TYPE
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: left;
+                          font-size: 9pt;
+                        "
+                      >
+                        DELETED ON
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: center;
+                          font-size: 9pt;
+                        "
+                      >
+                        LEDGER ROWS
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: center;
+                          font-size: 9pt;
+                        "
+                      >
+                        ACTIONS
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="recycle-bin-body">
+                    <tr>
+                      <td
+                        colspan="5"
+                        style="text-align: center; padding: 24px; color: #aaa"
+                      >
+                        Click 🔄 Refresh to load deleted records
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Section B: Deleted Cashbook Rows -->
+              <p
+                style="
+                  font-size: 10px;
+                  font-weight: 800;
+                  color: #c0392b;
+                  margin: 0 0 6px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                💵 Deleted Cashbook Rows
+              </p>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-family: Nunito, sans-serif;
+                  "
+                >
+                  <thead>
+                    <tr style="background: #fde0e8; color: #c0392b">
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: left;
+                          font-size: 9pt;
+                        "
+                      >
+                        NAME
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: left;
+                          font-size: 9pt;
+                        "
+                      >
+                        ENTRY TYPE
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: right;
+                          font-size: 9pt;
+                        "
+                      >
+                        AMOUNT
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: center;
+                          font-size: 9pt;
+                        "
+                      >
+                        TX TYPE
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: left;
+                          font-size: 9pt;
+                        "
+                      >
+                        DELETED ON
+                      </th>
+                      <th
+                        style="
+                          padding: 8px 10px;
+                          text-align: center;
+                          font-size: 9pt;
+                        "
+                      >
+                        ACTIONS
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="recycle-cb-rows-body">
+                    <tr>
+                      <td
+                        colspan="6"
+                        style="text-align: center; padding: 24px; color: #aaa"
+                      >
+                        No deleted cashbook rows
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- end ltab-panel wrapper -->
+        </div>
+
+        <!-- IMPORT DATA -->
+        <div class="page" id="page-import">
+          <div class="import-layout">
+            <div class="pghdr">
+              <div class="pghdr-icon" style="background: var(--sky)">📤</div>
+              <div>
+                <h2 style="color: var(--sky-a)">Import Previous Data</h2>
+                <p>Upload Excel or CSV files</p>
+              </div>
+            </div>
+            <div class="imp-card">
+              <h3>Step 1 — Upload File</h3>
+              <p>
+                Supports Excel (.xlsx, .xls) and CSV (.csv). Only Customer Name
+                column is required.
+              </p>
+              <div
+                class="drop-zone"
+                id="drop-zone"
+                onclick="document.getElementById('file-inp').click()"
+                ondragover="
+                  event.preventDefault();
+                  this.classList.add('over');
+                "
+                ondragleave="this.classList.remove('over')"
+                ondrop="onDrop(event)"
+              >
+                <input
+                  type="file"
+                  id="file-inp"
+                  aria-label="Import Excel or CSV file"
+                  accept=".xlsx,.xls,.csv"
+                  style="display: none"
+                  onchange="onFileSelect(event)"
+                />
+                <div class="dz-icon">📂</div>
+                <h4>Tap to browse or drag &amp; drop</h4>
+                <p>.xlsx · .xls · .csv</p>
+              </div>
+              <div
+                id="file-info"
+                style="
+                  margin-top: 9px;
+                  font-size: 11px;
+                  color: var(--mint-a);
+                  font-weight: 700;
+                  display: none;
+                "
+              ></div>
+            </div>
+            <div class="imp-card" id="map-card" style="display: none">
+              <h3>Step 2 — Map Columns</h3>
+              <p>Match your file columns to database fields.</p>
+              <div class="map-grid" id="col-map"></div>
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 9px;
+                  margin-bottom: 12px;
+                "
+              >
+                <div>
+                  <label
+                    style="
+                      font-size: 8px;
+                      font-weight: 800;
+                      color: var(--textl);
+                      display: block;
+                      margin-bottom: 5px;
+                    "
+                    for="imp-section"
+                    >SECTION</label
+                  >
+                  <select
+                    id="imp-section"
+                    style="
+                      width: 100%;
+                      padding: 9px;
+                      border-radius: 7px;
+                      border: 1.5px solid var(--border);
+                      font-family: &quot;Nunito&quot;, sans-serif;
+                      font-size: 12px;
+                      background: #fff;
+                      -webkit-appearance: none;
+                    "
+                  >
+                    <option value="gold">Gold Loan</option>
+                    <option value="fd">Fixed Deposit</option>
+                    <option value="membership">Membership</option>
+                    <option value="od">FD-OD Loan</option>
+                    <option value="saving">Saving Account</option>
+                    <option value="current">Current Account</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    style="
+                      font-size: 8px;
+                      font-weight: 800;
+                      color: var(--textl);
+                      display: block;
+                      margin-bottom: 5px;
+                    "
+                    for="imp-ctype"
+                    >CUSTOMER TYPE</label
+                  >
+                  <select
+                    id="imp-ctype"
+                    style="
+                      width: 100%;
+                      padding: 9px;
+                      border-radius: 7px;
+                      border: 1.5px solid var(--border);
+                      font-family: &quot;Nunito&quot;, sans-serif;
+                      font-size: 12px;
+                      background: #fff;
+                      -webkit-appearance: none;
+                    "
+                  >
+                    <option value="regular">Regular</option>
+                                      </select>
+                </div>
+              </div>
+            </div>
+            <div class="imp-card" id="preview-card" style="display: none">
+              <h3>Step 3 — Preview &amp; Import</h3>
+              <p id="preview-info"></p>
+              <div class="preview-wrap" id="preview-table"></div>
+              <div id="import-prog" style="display: none; margin-top: 10px">
+                <div
+                  style="
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: var(--mint-a);
+                  "
+                  id="prog-text"
+                >
+                  Importing…
+                </div>
+                <div class="prog-wrap">
+                  <div class="prog-bar" id="prog-bar" style="width: 0%"></div>
+                </div>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 8px;
+                  margin-top: 12px;
+                  flex-wrap: wrap;
+                "
+              >
+                <button class="btn btn-main" onclick="doImport()">
+                  📥 Import All
+                </button>
+                <button class="btn btn-reset" onclick="resetImport()">
+                  ✕ Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY-END SUMMARY PAGE -->
+        <div class="page" id="page-dayend" style="padding: 12px">
+          <div style="font-weight: 800; font-size: 13pt; margin-bottom: 10px">
+            📊 Day-End Summary
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+            <input type="date" id="dayend-date"
+              style="padding: 9px 12px; border-radius: 7px; border: 1.5px solid #ccc; font-size: 15px; font-family: Nunito, sans-serif; min-height: 40px;"
+              onchange="loadDayEnd()" />
+            <button onclick="loadDayEnd()"
+              style="padding: 10px 16px; background: #1a3a5c; color: #fff; border: none; border-radius: 7px; font-weight: 700; font-size: 13px; cursor: pointer; min-height: 40px;">
+              🔄 Load
+            </button>
+            <button onclick="printDayEnd()"
+              style="padding: 10px 16px; background: #27ae60; color: #fff; border: none; border-radius: 7px; font-weight: 700; font-size: 13px; cursor: pointer; min-height: 40px;">
+              🖨️ Print
+            </button>
+          </div>
+          <div id="dayend-content" style="font-size: 11pt">
+            <div style="color: #aaa; font-size: 9pt; padding: 20px; text-align: center">
+              Select a date and click Load
+            </div>
+          </div>
+        </div>
+
+        <!-- BULK MIS INTEREST PAGE -->
+        <div class="page" id="page-mis" style="padding: 12px">
+          <div style="font-weight: 800; font-size: 13pt; margin-bottom: 4px">
+            💳 Bulk MIS Interest Posting
+          </div>
+          <div style="font-size: 9pt; color: #555; margin-bottom: 12px">
+            Post monthly interest for all active MIS accounts in one click.
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+            <input type="date" id="mis-post-date"
+              style="padding: 9px 12px; border-radius: 7px; border: 1.5px solid #ccc; font-size: 15px; font-family: Nunito, sans-serif; min-height: 40px;" />
+            <button onclick="loadMISDue()"
+              style="padding: 10px 16px; background: #1a3a5c; color: #fff; border: none; border-radius: 7px; font-weight: 700; font-size: 13px; cursor: pointer; min-height: 40px;">
+              📋 Load Due Accounts
+            </button>
+          </div>
+          <div id="mis-due-list" style="margin-bottom: 12px"></div>
+          <div id="mis-post-area" style="display: none">
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+              <button onclick="toggleAllMIS(true)"
+                style="padding: 8px 14px; font-size: 12px; background: #eaf6ff; color: #1a5276; border: 1px solid #aed6f1; border-radius: 6px; cursor: pointer; font-weight: 700; min-height: 36px;">
+                ☑ All
+              </button>
+              <button onclick="toggleAllMIS(false)"
+                style="padding: 8px 14px; font-size: 12px; background: #fef9e7; color: #7d6608; border: 1px solid #f9e79f; border-radius: 6px; cursor: pointer; font-weight: 700; min-height: 36px;">
+                ☐ None
+              </button>
+              <button onclick="postMISInterest()"
+                style="padding: 10px 20px; background: #27ae60; color: #fff; border: none; border-radius: 7px; font-weight: 800; font-size: 13px; cursor: pointer; min-height: 40px;">
+                ✅ Post Selected
+              </button>
+            </div>
+            <div id="mis-post-result" style="font-size: 9.5pt"></div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /main -->
+
+      <!-- EDIT MODAL -->
+      <div class="overlay" id="edit-modal">
+        <div class="modal">
+          <div class="modal-hdr">
+            <div class="modal-title">✏️ Edit Record</div>
+            <button class="mc" onclick="closeEdit()">✕</button>
+          </div>
+          <div id="edit-body"></div>
+          <div
+            style="display: flex; gap: 8px; margin-top: 13px; flex-wrap: wrap"
+          >
+            <button class="btn btn-main" onclick="saveEdit()">💾 Save</button>
+            <button
+              class="btn"
+              style="background: var(--mint); color: var(--mint-a)"
+              onclick="closeEdit()"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"><span id="toast-msg"></span></div>
+    </div>
+    <!-- end app-main-wrap -->
+
+    <script src="js/data/static-data.js"></script>
+    <script src="js/app.js"></script>
+    <script src="pdf-template.js"></script>
+    <script src="export-ui.js"></script>
+
+    <!-- ══ CLOSE ACCOUNT MODAL ══ -->
+    <div
+      id="close-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 14px;
+          padding: 28px 28px 22px;
+          width: 460px;
+          max-width: 95vw;
+          max-height: 92vh;
+          overflow-y: auto;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+          "
+        >
+          <div>
+            <div
+              id="close-rec-title"
+              style="font-size: 15px; font-weight: 800; color: #c0392b"
+            ></div>
+            <div
+              id="close-rec-types"
+              style="font-size: 11px; color: #777; margin-top: 2px"
+            ></div>
+          </div>
+          <button
+            onclick="closeCloseModal()"
+            style="
+              background: #f0f0f0;
+              border: none;
+              border-radius: 8px;
+              padding: 6px 12px;
+              cursor: pointer;
+              font-size: 14px;
+            "
+          >
+            ✕
+          </button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div
+            id="close-summary"
+            style="
+              display: none;
+              background: #f7f9fc;
+              border: 1px solid #dde3ec;
+              border-radius: 8px;
+              padding: 10px 12px;
+            "
+          ></div>
+          <div
+            id="close-warning"
+            style="
+              display: none;
+              background: #fff3cd;
+              border: 1px solid #ffc107;
+              border-radius: 8px;
+              padding: 9px 12px;
+              font-size: 11px;
+              font-weight: 600;
+              color: #856404;
+              line-height: 1.5;
+            "
+          ></div>
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #555;
+                display: block;
+                margin-bottom: 6px;
+              "
+              >Select types to close:</label
+            >
+            <div
+              id="close-tx-select"
+              style="
+                background: #f8f9ff;
+                border: 1.5px solid #e0e7ff;
+                border-radius: 8px;
+                padding: 8px 12px;
+                min-height: 32px;
+              "
+            ></div>
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #555;
+                display: block;
+                margin-bottom: 4px;
+              "
+              >Closing Date</label
+            >
+            <input
+              id="close-date"
+              type="date"
+              style="
+                width: 100%;
+                padding: 9px 11px;
+                border: 1.5px solid #ddd;
+                border-radius: 8px;
+                font-size: 13px;
+                font-family: inherit;
+              "
+            />
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #555;
+                display: block;
+                margin-bottom: 4px;
+              "
+              >Remarks (optional)</label
+            >
+            <textarea
+              id="close-remarks"
+              rows="2"
+              placeholder="e.g. Full repayment done, ornaments returned"
+              style="
+                width: 100%;
+                padding: 9px 11px;
+                border: 1.5px solid #ddd;
+                border-radius: 8px;
+                font-size: 13px;
+                font-family: inherit;
+                resize: vertical;
+              "
+            ></textarea>
+          </div>
+          <div>
+            <label
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #555;
+                display: block;
+                margin-bottom: 4px;
+              "
+              >Generate Closing PDF?</label
+            >
+            <select
+              id="close-pdf-type"
+              onchange="_onClosePdfTypeChange()"
+              style="
+                width: 100%;
+                padding: 9px 11px;
+                border: 1.5px solid #ddd;
+                border-radius: 8px;
+                font-size: 13px;
+                font-family: inherit;
+                background: #fff;
+              "
+            ></select>
+            <div style="font-size: 10px; color: #999; margin-top: 3px">
+              Auto-suggested based on account type. All customer & loan details
+              are auto-populated from the database — only the closing date
+              (above) is needed.
+            </div>
+            <div
+              id="close-pdf-warn"
+              style="
+                display: none;
+                font-size: 10.5px;
+                font-weight: 700;
+                color: #b7791f;
+                margin-top: 5px;
+                background: #fffaf0;
+                border: 1px solid #f6e2b3;
+                border-radius: 6px;
+                padding: 5px 8px;
+              "
+            >
+              ⚠️ No receipt will be generated for this closure.
+            </div>
+          </div>
+          <div
+            style="
+              font-size: 10.5px;
+              color: #a94442;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+              margin-top: 2px;
+            "
+          >
+            ⚠️ This closes the account permanently — this action cannot be
+            undone.
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 4px">
+            <button
+              onclick="closeCloseModal()"
+              style="
+                flex: 1;
+                padding: 10px;
+                border: 1.5px solid #ddd;
+                border-radius: 8px;
+                background: #f5f5f5;
+                cursor: pointer;
+                font-weight: 700;
+                font-size: 13px;
+              "
+            >
+              Cancel
+            </button>
+            <button
+              id="close-confirm-btn"
+              onclick="confirmClose()"
+              style="
+                flex: 2;
+                padding: 10px;
+                border: none;
+                border-radius: 8px;
+                background: #c0392b;
+                color: #fff;
+                cursor: pointer;
+                font-weight: 800;
+                font-size: 13px;
+              "
+            >
+              🔒 Confirm Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CLOSE DAY MODAL ══ -->
+    <div
+      id="close-day-modal"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 9998;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 16px;
+          padding: 28px 28px 22px;
+          width: 480px;
+          max-width: 96vw;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+          max-height: 90vh;
+          overflow-y: auto;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          "
+        >
+          <div>
+            <div style="font-size: 16px; font-weight: 800; color: #1a3a5c">
+              🔒 Close Day & Save to Database
+            </div>
+            <div
+              id="close-day-subtitle"
+              style="font-size: 11px; color: #777; margin-top: 2px"
+            ></div>
+            <div
+              style="
+                font-size: 10px;
+                color: #555;
+                margin-top: 4px;
+                max-width: 340px;
+                line-height: 1.5;
+              "
+            >
+              Saves all transactions &amp; ledger entries for this date to the
+              database. Re-selecting this date later will restore all data.
+            </div>
+          </div>
+          <button
+            onclick="
+              document.getElementById('close-day-modal').style.display = 'none'
+            "
+            style="
+              background: #f0f0f0;
+              border: none;
+              border-radius: 8px;
+              padding: 6px 12px;
+              cursor: pointer;
+              font-size: 14px;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Summary cards -->
+        <div
+          id="close-day-summary"
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+          "
+        >
+          <div class="cd-card" id="cd-gold">
+            <div class="cd-num" id="cd-gold-n">—</div>
+            <div class="cd-lbl">🥇 Gold Loans (New)</div>
+          </div>
+          <div class="cd-card" id="cd-closed">
+            <div class="cd-num" id="cd-closed-n">—</div>
+            <div class="cd-lbl">🔒 Loans Closed</div>
+          </div>
+          <div class="cd-card" id="cd-fd">
+            <div class="cd-num" id="cd-fd-n">—</div>
+            <div class="cd-lbl">📈 FD Accounts (New)</div>
+          </div>
+          <div class="cd-card" id="cd-ledger">
+            <div class="cd-num" id="cd-ledger-n">—</div>
+            <div class="cd-lbl">📋 Ledger Entries</div>
+          </div>
+        </div>
+
+        <!-- Status log -->
+        <div
+          id="close-day-log"
+          style="
+            display: none;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 11px;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 14px;
+            font-family: monospace;
+            line-height: 1.7;
+          "
+        ></div>
+
+        <!-- Action buttons -->
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button
+            onclick="
+              document.getElementById('close-day-modal').style.display = 'none'
+            "
+            style="
+              flex: 1;
+              padding: 11px;
+              border: 1.5px solid #ddd;
+              border-radius: 8px;
+              background: #f5f5f5;
+              cursor: pointer;
+              font-weight: 700;
+              font-size: 13px;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            onclick="
+              document.getElementById('close-day-modal').style.display = 'none';
+              gotoCashbookTab();
+            "
+            title="Check entries and print from the Cash Book tab"
+            style="
+              flex: 1;
+              padding: 11px;
+              border: 1.5px solid #27ae60;
+              border-radius: 8px;
+              background: #eafaf1;
+              color: #1a7a40;
+              cursor: pointer;
+              font-weight: 800;
+              font-size: 12px;
+            "
+          >
+            🧾 Cash Book (रोखवही)
+          </button>
+          <button
+            onclick="
+              document.getElementById('close-day-modal').style.display = 'none';
+              showPage('ledger'); switchLedgerTab('template')
+            "
+            title="Check aggregated voucher amounts and print from the Template Data tab"
+            style="
+              flex: 1;
+              padding: 11px;
+              border: 1.5px solid #553c9a;
+              border-radius: 8px;
+              background: #f3eefc;
+              color: #553c9a;
+              cursor: pointer;
+              font-weight: 800;
+              font-size: 12px;
+            "
+          >
+            🏦 Vouchers
+          </button>
+          <button
+            id="close-day-confirm-btn"
+            onclick="runCloseDaySync()"
+            style="
+              flex: 2;
+              padding: 11px;
+              border: none;
+              border-radius: 8px;
+              background: linear-gradient(135deg, #1a3a5c, #2980b9);
+              color: #fff;
+              cursor: pointer;
+              font-weight: 800;
+              font-size: 13px;
+            "
+          >
+            ✅ Sync & Close Day
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- ══ CUSTOMER 360 MODAL ══ -->
+    <div
+      id="cust360-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9000;
+        overflow-y: auto;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 12px;
+          max-width: 560px;
+          margin: 24px auto;
+          padding: 0;
+          overflow: hidden;
+        "
+      >
+        <div
+          style="
+            background: #1a3a5c;
+            color: #fff;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div style="font-weight: 800; font-size: 12pt">
+            👤 Customer 360° View
+          </div>
+          <button
+            onclick="
+              document.getElementById('cust360-modal').style.display = 'none'
+            "
+            style="
+              background: rgba(255, 255, 255, 0.2);
+              border: none;
+              color: #fff;
+              border-radius: 6px;
+              padding: 4px 10px;
+              cursor: pointer;
+              font-size: 13px;
+            "
+          >
+            ✕
+          </button>
+        </div>
+        <div id="cust360-content" style="padding: 16px; font-size: 10pt"></div>
+      </div>
+    </div>
+
+    <!-- ══ GOLD LOAN INTEREST MODAL ══ -->
+    <div
+      id="interest-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9001;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          border-radius: 12px;
+          width: 340px;
+          max-width: calc(100vw - 24px);
+          padding: 0;
+          overflow: hidden;
+        "
+      >
+        <div
+          style="
+            background: #1a5276;
+            color: #fff;
+            padding: 13px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div style="font-weight: 800; font-size: 11.5pt">
+            💰 Interest Calculator
+          </div>
+          <button
+            onclick="
+              document.getElementById('interest-modal').style.display = 'none'
+            "
+            style="
+              background: rgba(255, 255, 255, 0.2);
+              border: none;
+              color: #fff;
+              border-radius: 6px;
+              padding: 3px 9px;
+              cursor: pointer;
+            "
+          >
+            ✕
+          </button>
+        </div>
+        <div
+          id="interest-modal-content"
+          style="padding: 16px; font-size: 10pt"
+        ></div>
+      </div>
+    </div>
+
+    <!-- ══ END CLOSE DAY MODAL ══ -->
+
+  <script>
+  /* ── Sync secondary dashboard KPI elements from stats data ── */
+  /* s-active-gold2, s-today-opened, s-today-closed, s-closed-gold
+     are fetched directly from /api/stats and also synced from s-active-gold */
+  (function syncDashKPIs() {
+    function _copy(fromId, toId) {
+      var src = document.getElementById(fromId);
+      var dst = document.getElementById(toId);
+      if (src && dst && src.textContent !== '—') dst.textContent = src.textContent;
+    }
+    function _set(id, val) {
+      var el = document.getElementById(id);
+      if (el && val != null) el.textContent = val;
+    }
+    function _fetchStats() {
+      var token = localStorage.getItem('jju_token') || '';
+      if (!token) return; // skip if not logged in — avoids 401
+      fetch('/api/records/stats', { headers: { 'x-auth-token': token } })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(s) {
+          if (!s) return;
+          _set('s-today-opened', s.today_gold_opened != null ? s.today_gold_opened : (s.todayRecords != null ? s.todayRecords : '—'));
+          _set('s-today-closed', s.today_gold_closed != null ? s.today_gold_closed : '0');
+          _set('s-closed-gold',  s.closed_gold_loans != null ? s.closed_gold_loans : '—');
+          _set('s-active-gold2', s.active_gold_loans != null ? s.active_gold_loans : '—');
+        })
+        .catch(function() {});
+    }
+    var _attempts = 0;
+    var _iv = setInterval(function() {
+      var el = document.getElementById('s-active-gold');
+      if (!el || el.textContent === '—') { if (++_attempts > 60) clearInterval(_iv); return; }
+      clearInterval(_iv);
+      _copy('s-active-gold', 's-active-gold2');
+    }, 300);
+    var _obs = new MutationObserver(function() {
+      _copy('s-active-gold', 's-active-gold2');
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('s-active-gold');
+      if (el) _obs.observe(el, { childList: true, characterData: true, subtree: true });
+      _fetchStats();
+    });
+  })();
+  </script>
+
+  <!-- ══ LOAD APPLICATION SCRIPTS ══ -->
+  <!-- IMPORTANT: Order matters!
+       1. static-data.js must load first (contains SECTIONS, etc. needed by app.js)
+       2. app.js is the main application logic
+  -->
+
+  
+
+  </body>
+</html>
