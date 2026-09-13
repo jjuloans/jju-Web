@@ -1692,6 +1692,45 @@ async function runMigrations() {
     await run(`CREATE INDEX IF NOT EXISTS idx_share_accounts_customer_id ON share_accounts(customer_id)`);
   });
 
+  // Schema drift fix: the live production database has records.account_no
+  // as NOT NULL DEFAULT '' — this was never captured here, so create()/
+  // update() inserting/updating NULL (their old behavior) crashed with a
+  // not-null-constraint 500 on every record with no account number (most
+  // transaction types: cash entries, deposits/withdrawals, bank
+  // transactions, etc. — see records.controller.js create()/update() fix
+  // alongside this migration). Backfill first so the NOT NULL doesn't fail
+  // on any existing NULL rows, then match the live column definition.
+  await migrate('v15_records_account_no_not_null', async () => {
+    await run(`UPDATE records SET account_no = '' WHERE account_no IS NULL`);
+    await run(`ALTER TABLE records ALTER COLUMN account_no SET DEFAULT ''`);
+    await run(`ALTER TABLE records ALTER COLUMN account_no SET NOT NULL`);
+  });
+
+  // Moved from features/audit.middleware.js's standalone, un-retried
+  // module-load-time call (see the BUG FIX comment left in that file) —
+  // this now runs through the same waitForDB() gate and tracked-migration
+  // system as every other table, so it can no longer silently fail to be
+  // created on a rocky startup and leave the app with zero audit trail.
+  await migrate('v16_audit_log_table', async () => {
+    await run(`
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id          SERIAL PRIMARY KEY,
+        user_id     INTEGER,
+        username    TEXT,
+        action      TEXT NOT NULL,
+        resource    TEXT NOT NULL,
+        resource_id TEXT,
+        ip          TEXT,
+        user_agent  TEXT,
+        diff        JSONB,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await run(`CREATE INDEX IF NOT EXISTS idx_audit_user       ON audit_log(user_id)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_audit_resource   ON audit_log(resource)`);
+    await run(`CREATE INDEX IF NOT EXISTS idx_audit_created_at ON audit_log(created_at)`);
+  });
+
   if (DRY_RUN) {
     if (dryRunErrors.length === 0) {
       console.log('✅ Dry run complete — no structural errors found');

@@ -1256,7 +1256,12 @@ async function create(req, res) {
         customer_type,
         aadhar || "",
         mobile || "",
-        account_no || null,
+        // BUG FIX (schema drift): records.account_no is NOT NULL DEFAULT ''
+        // on the live database (never captured in migrations.js until
+        // v15) — inserting NULL here 500'd every create() call for a
+        // record with no account number (most transaction types: cash
+        // entries, deposits/withdrawals, bank transactions, etc.).
+        account_no || "",
         effectiveSection,
         txStr,
         typeof mergedData === "object"
@@ -1362,7 +1367,8 @@ async function update(req, res) {
         customer_type || "regular",
         aadhar || "",
         mobile || "",
-        account_no || null,
+        // BUG FIX (schema drift): same NOT NULL constraint as create() above.
+        account_no || "",
         section,
         txStr,
         typeof mergedData === "object"
@@ -1380,6 +1386,24 @@ async function update(req, res) {
       return res
         .status(404)
         .json({ error: "Record not found or already deleted" });
+    }
+
+    // BUG FIX ("editing a transaction's date doesn't move the Transaction
+    // Ledger row"): this endpoint updated records.date above but never
+    // touched cashbook_entries — the table the ledger (cashbook.controller.js
+    // list()) actually reads and filters by date. So changing a record's
+    // date here left every cashbook_entries row generated from it (via
+    // record_id) stuck on the OLD date: it kept showing on the old date's
+    // ledger and never appeared on the new one. softDelete()/restore() above
+    // already cascade WHERE record_id=$1 to cashbook_entries for is_deleted —
+    // this is the same pattern applied to date.
+    if (date) {
+      await pool
+        .query(`UPDATE cashbook_entries SET date=$1, updated_at=NOW() WHERE record_id=$2`, [
+          date,
+          id,
+        ])
+        .catch(() => {});
     }
 
     if (name)
@@ -4793,6 +4817,132 @@ async function customerProfile(req, res) {
   }
 }
 
+
+// ── GET /api/records/statement/:id ─────────────────────────────────────────
+// Feature: "Account Statement" (admin.html's Passbook page). The page and
+// its printStatement() renderer were built and wired to call
+// `${API}/statement/${id}` (API = "/api/records"), but this route was never
+// added on the backend, so every click 404'd (fell through to the /:id
+// generic-CRUD route not matching a 2-segment path, then the catch-all
+// app.use("/api/*", ...) 404 handler) — the page has been dead since it was
+// built. Reuses the exact query shapes already verified live and correct in
+// dashboard.routes.js's GET /api/customers/:id/profile (acc_no read directly
+// off each mirror table, joined on that table's own customer_id — the
+// pattern established as correct in this file's own customerProfile()
+// comment above), plus two additions printStatement() specifically needs
+// that no existing endpoint returns: shares.balance aliased as share_amount
+// (share_accounts has no separate share-count/share-amount split — balance
+// IS the share value), and memberships joined to saving_accounts by acc_no
+// to surface a live saving_balance (memberships only stores the linked
+// saving_acc_no as text, not a balance of its own).
+async function statement(req, res) {
+  try {
+    const rawId = req.params.id;
+
+    const tryQuery = async (sql, params) => {
+      try {
+        const result = await pool.query(sql, params);
+        return result.rows[0] || null;
+      } catch (e) {
+        console.error('[statement] lookup query failed:', e.message);
+        return null;
+      }
+    };
+
+    let customer = null;
+    if (/^\d+$/.test(rawId)) {
+      customer = await tryQuery('SELECT * FROM customers WHERE id = $1 LIMIT 1', [parseInt(rawId, 10)]);
+    }
+    if (!customer) {
+      customer = await tryQuery(
+        'SELECT * FROM customers WHERE customer_id = $1 OR cust_code = $1 LIMIT 1',
+        [rawId],
+      );
+    }
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
+    const custId = customer.id;
+
+    const safeQuery = (sql, params) =>
+      pool.query(sql, params).catch((e) => {
+        console.error('[statement] sub-query failed:', e.message);
+        return { rows: [] };
+      });
+
+    const [goldLoans, savingAccounts, fdAccounts, odLoans, shares, memberships] =
+      await Promise.all([
+        safeQuery(
+          `SELECT gl.acc_no, gl.loan_amount,
+                  COALESCE((r.data->>'balance')::numeric, gl.loan_amount) AS balance,
+                  COALESCE((r.data->>'interest_rate')::numeric, 0)        AS interest_rate,
+                  COALESCE(gl.loan_date::text, r.date::text)              AS start_date,
+                  r.closed_date::text AS end_date,
+                  gl.status
+           FROM gold_loans gl
+           LEFT JOIN records r ON r.id = gl.record_id AND r.is_deleted = FALSE
+           WHERE gl.customer_id = $1
+           ORDER BY gl.status = 'active' DESC, gl.acc_no`,
+          [custId],
+        ),
+        safeQuery(
+          `SELECT acc_no, start_date, interest_rate, balance, status
+           FROM saving_accounts WHERE customer_id = $1
+           ORDER BY status = 'active' DESC, acc_no`,
+          [custId],
+        ),
+        safeQuery(
+          `SELECT acc_no, start_date, end_date, interest_rate,
+                  fd_amount, maturity_amount, status
+           FROM fd_accounts WHERE customer_id = $1
+           ORDER BY status = 'active' DESC, acc_no`,
+          [custId],
+        ),
+        safeQuery(
+          `SELECT acc_no, loan_amount, balance, interest_rate, status
+           FROM od_loans WHERE customer_id = $1
+           ORDER BY status = 'active' DESC, acc_no`,
+          [custId],
+        ),
+        safeQuery(
+          `SELECT acc_no, balance AS share_amount, NULL::text AS num_shares, status
+           FROM share_accounts WHERE customer_id = $1
+           ORDER BY status = 'active' DESC, acc_no`,
+          [custId],
+        ),
+        safeQuery(
+          `SELECT m.acc_no, m.membership_type, m.saving_acc_no,
+                  sa.balance AS saving_balance, m.status
+           FROM memberships m
+           LEFT JOIN saving_accounts sa ON sa.acc_no = m.saving_acc_no
+           WHERE m.customer_id = $1
+           ORDER BY m.status = 'active' DESC, m.acc_no`,
+          [custId],
+        ),
+      ]);
+
+    res.json({
+      customer: {
+        name: customer.name,
+        customer_id: customer.customer_id,
+        mobile: customer.mobile,
+        aadhar: customer.aadhar,
+        pan: customer.pan || customer.pan_no || null,
+        dob: customer.dob,
+        address: customer.address,
+      },
+      gold_loans: goldLoans.rows,
+      fd_accounts: fdAccounts.rows,
+      saving_accounts: savingAccounts.rows,
+      od_loans: odLoans.rows,
+      shares: shares.rows,
+      memberships: memberships.rows,
+    });
+  } catch (err) {
+    console.error('[statement]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   list,
   stats,
@@ -4833,6 +4983,7 @@ module.exports = {
   checkCustomerId,
   customerFullData,
   customerProfile,
+  statement,
   loanHolder,
   getSavingBalance,
   dailySummary,

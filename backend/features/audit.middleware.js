@@ -1,27 +1,21 @@
 'use strict';
 const pool = require('../db/pool');
 
-// ── Migration: run once on startup ────────────────────────────────────────
-async function ensureAuditTable() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS audit_log (
-      id          SERIAL PRIMARY KEY,
-      user_id     INTEGER,
-      username    TEXT,
-      action      TEXT NOT NULL,
-      resource    TEXT NOT NULL,
-      resource_id TEXT,
-      ip          TEXT,
-      user_agent  TEXT,
-      diff        JSONB,
-      created_at  TIMESTAMPTZ DEFAULT NOW()
-    )
-  `);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_user       ON audit_log(user_id)`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_resource   ON audit_log(resource)`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_created_at ON audit_log(created_at)`);
-}
-ensureAuditTable().catch(e => console.error('[audit] table init failed:', e.message));
+// BUG FIX: audit_log table creation used to happen here, in a standalone
+// call that fired the instant this file was require()'d — completely
+// outside server.js's waitForDB() retry gate that everything else in this
+// app goes through. If Postgres wasn't fully up yet at that exact moment
+// (the same PM2/Windows boot-ordering race documented in server.js's
+// waitForDB() and migrations.js's ensureTrackingTable()), this call failed,
+// was logged as "[audit] table init failed: ... connection timeout", and
+// never retried. Every subsequent audit write also swallows its own errors
+// silently (see writeLog below), so a single unlucky startup could leave
+// this app running normally for users while producing a completely empty
+// audit trail until the next successful restart — a real accountability
+// gap for a banking app, not just log noise.
+// Fixed by moving table creation into migrations.js (v16_audit_log_table),
+// which already runs through waitForDB() + the tracked-migration system
+// before the server starts accepting requests, same as every other table.
 
 // ── Core writer ───────────────────────────────────────────────────────────
 async function writeLog({ user_id, username, action, resource, resource_id, ip, user_agent, diff }) {

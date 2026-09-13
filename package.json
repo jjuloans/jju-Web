@@ -1,7 +1,7 @@
 {
   "name": "jju-bank-dashboard",
   "version": "3.0.0",
-  "description": "JJU Bank Dashboard — full backend with all DB connections",
+  "description": "JJU Bank Dashboard \u2014 full backend with all DB connections",
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
@@ -14,7 +14,9 @@
     "dev:staging": "cross-env ENV_FILE=.env.staging nodemon backend/server.js",
     "pm2:staging": "cross-env ENV_FILE=.env.staging pm2 start backend/server.js --name jju-bank-staging",
     "pm2:staging:stop": "pm2 stop jju-bank-staging",
-    "pm2:staging:logs": "pm2 logs jju-bank-staging"
+    "pm2:staging:logs": "pm2 logs jju-bank-staging",
+    "test:legacy": "node --test backend/gold-loan-fixes.test.js",
+    "test:all": "npm run test && npm run test:legacy"
   },
   "dependencies": {
     "compression": "^1.8.1",

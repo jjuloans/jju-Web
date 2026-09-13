@@ -4360,7 +4360,6 @@ function showPage(id) {
     if (ldgDate && !ldgDate.value)
       ldgDate.value = new Date().toISOString().split("T")[0];
     loadLedger();
-    setTimeout(_injectCashEntryButtons, 200);
   }
   window.scrollTo(0, 0);
 }
@@ -6763,7 +6762,14 @@ const BANK_TRF_ACC_TYPES = new Set([
 ]);
 function isBankTRFRow(r) {
   const t = (r.acc_type || r.task || "").trim();
-  return BANK_TRF_ACC_TYPES.has(t) && r.mode === "Transfer";
+  // BUG FIX (Task #5 — "Template Data / covering vouchers should
+  // auto-generate per bank account"): this used to require mode ===
+  // "Transfer", so a Cash-mode entry against one of these bank accounts
+  // (e.g. a cash deposit/withdrawal at BU Curr or BoM Curr, both of which
+  // show up with real amounts in the Template Data tab) never qualified for
+  // a Bank TRF voucher at all — Template Data would show the amount, but no
+  // voucher ever got generated for it. Now both modes count.
+  return BANK_TRF_ACC_TYPES.has(t) && (r.mode === "Transfer" || r.mode === "Cash");
 }
 
 // ── Options for editable dropdowns ───────────────────────────────────────────
@@ -6965,7 +6971,6 @@ async function loadLedger() {
     (subCount !== 1 ? "s" : "");
 
   renderLedger();
-  _injectCashEntryButtons();
 
   } finally {
     _ldgLoading = false;
@@ -8177,196 +8182,6 @@ ${ldgInlineEdit(r.id, "loan_date", r.loan_date, "Date")}
   });
 }
 
-// ── CASH BOOK TAB ─────────────────────────────────────────────────────────────
-// Only Cash mode, non-zero amounts — mirrors Google Sheets CashBook tab
-// ── Inject Cash Withdrawal / Cash Deposit buttons into the ledger toolbar ──
-function _injectCashEntryButtons() {
-  // Idempotent — only add once per page render
-  if (document.getElementById('ldg-cash-wd-btn')) return;
-
-  // Try to find an existing toolbar container inside the ledger page
-  // Common candidates: a div with load button, the ldg-count span's parent, etc.
-  const ldgCount = document.getElementById('ldg-count');
-  if (!ldgCount) return;
-
-  // Walk up to find the toolbar row (usually 1–2 levels up from ldg-count)
-  let toolbar = ldgCount.closest('[class*="toolbar"], [class*="actions"], [class*="controls"], [id*="ldg-ctrl"], [id*="ldg-action"]');
-  if (!toolbar) toolbar = ldgCount.parentElement;  // fallback: same row
-  if (!toolbar) return;
-
-  const wd = document.createElement('button');
-  wd.id = 'ldg-cash-wd-btn';
-  wd.innerHTML = '🏦 Cash Withdrawal';
-  wd.title = 'Add a current account cash withdrawal entry';
-  wd.style.cssText = 'background:#7a1010;color:#fff;border:none;border-radius:7px;padding:5px 13px;cursor:pointer;font-size:9pt;font-weight:800;white-space:nowrap;margin-left:6px';
-  wd.onclick = () => openCashEntryModal('withdrawal');
-
-  const dep = document.createElement('button');
-  dep.id = 'ldg-cash-dep-btn';
-  dep.innerHTML = '🏦 Cash Deposit';
-  dep.title = 'Add a current account cash deposit entry';
-  dep.style.cssText = 'background:#1a5c2a;color:#fff;border:none;border-radius:7px;padding:5px 13px;cursor:pointer;font-size:9pt;font-weight:800;white-space:nowrap;margin-left:6px';
-  dep.onclick = () => openCashEntryModal('deposit');
-
-  toolbar.appendChild(wd);
-  toolbar.appendChild(dep);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CASH WITHDRAWAL / CASH DEPOSIT — Quick entry from Transaction Ledger tab
-//  These are current-account cash transactions that don't go through the
-//  New Transaction form. Staff enters them directly from the ledger.
-// ═══════════════════════════════════════════════════════════════════════════
-
-function openCashEntryModal(mode) {
-  // mode: 'withdrawal' | 'deposit'
-  const isWd = mode === 'withdrawal';
-  const title   = isWd ? '🏦 Cash Withdrawal — Current Account' : '🏦 Cash Deposit — Current Account';
-  const txLabel = isWd ? 'Curr Acc - Withdrawal' : 'Current Acc Deposit';
-  const txType  = isWd ? 'Debit' : 'Credit';
-  const amtField = isWd ? 'withdrawal_amount' : 'deposit_amount';
-
-  const date = document.getElementById('ldg-date')?.value ||
-    new Date().toISOString().split('T')[0];
-
-  // Remove any existing modal
-  const existing = document.getElementById('cash-entry-modal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'cash-entry-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25)">
-      <div style="background:${isWd ? '#7a1010' : '#1a5c2a'};color:#fff;padding:12px 16px;font-weight:800;font-size:11pt;display:flex;justify-content:space-between;align-items:center">
-        <span>${title}</span>
-        <button onclick="document.getElementById('cash-entry-modal').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:2px 10px;cursor:pointer;font-size:13pt;line-height:1">✕</button>
-      </div>
-      <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
-        <div>
-          <label style="font-size:9pt;font-weight:700;color:#555;display:block;margin-bottom:3px">दिनांक / Date</label>
-          <input id="cem-date" type="date" value="${date}" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:10pt">
-        </div>
-        <div>
-          <label style="font-size:9pt;font-weight:700;color:#555;display:block;margin-bottom:3px">खाते क्र. / Account No <span style="color:#888;font-weight:400">(Current Acc)</span></label>
-          <input id="cem-acc" type="text" placeholder="e.g. 42-1" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:10pt">
-        </div>
-        <div>
-          <label style="font-size:9pt;font-weight:700;color:#555;display:block;margin-bottom:3px">नाव / Name</label>
-          <input id="cem-name" type="text" placeholder="Customer or party name" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:10pt">
-        </div>
-        <div>
-          <label style="font-size:9pt;font-weight:700;color:#555;display:block;margin-bottom:3px">रक्कम / Amount (₹) <span style="color:#c0392b">*</span></label>
-          <input id="cem-amt" type="number" min="1" placeholder="0" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:12pt;font-weight:700">
-        </div>
-        <div>
-          <label style="font-size:9pt;font-weight:700;color:#555;display:block;margin-bottom:3px">टिप्पणी / Remarks</label>
-          <input id="cem-remarks" type="text" placeholder="Optional" style="width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:10pt">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:4px">
-          <button onclick="document.getElementById('cash-entry-modal').remove()"
-            style="flex:1;padding:9px;border:1.5px solid #ddd;border-radius:8px;background:#fafafa;font-size:10pt;cursor:pointer;font-weight:700">Cancel</button>
-          <button id="cem-save-btn" onclick="saveCashEntry('${mode}')"
-            style="flex:2;padding:9px;border:none;border-radius:8px;background:${isWd ? '#7a1010' : '#1a5c2a'};color:#fff;font-size:10pt;cursor:pointer;font-weight:800">
-            💾 Save ${isWd ? 'Withdrawal' : 'Deposit'}
-          </button>
-        </div>
-        <div id="cem-err" style="color:#c0392b;font-size:9pt;display:none;padding:4px 8px;background:#fde8e8;border-radius:5px"></div>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-  setTimeout(() => document.getElementById('cem-amt')?.focus(), 60);
-}
-
-async function saveCashEntry(mode) {
-  const isWd   = mode === 'withdrawal';
-  const task   = isWd ? 'Curr Acc - Withdrawal' : 'Current Acc Deposit';
-  const txType = isWd ? 'Debit' : 'Credit';
-  const amtField = isWd ? 'withdrawal_amount' : 'deposit_amount';
-
-  const date    = document.getElementById('cem-date')?.value || new Date().toISOString().split('T')[0];
-  const accNo   = (document.getElementById('cem-acc')?.value || '').trim() || '42';
-  const name    = (document.getElementById('cem-name')?.value || '').trim();
-  const amt     = parseFloat(document.getElementById('cem-amt')?.value || 0);
-  const remarks = (document.getElementById('cem-remarks')?.value || '').trim();
-
-  const errEl = document.getElementById('cem-err');
-  if (!amt || amt <= 0) {
-    errEl.textContent = 'Amount is required.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  const btn = document.getElementById('cem-save-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-
-  try {
-    // 1. Save a new record for this cash transaction
-    const recPayload = {
-      date,
-      name: name || (isWd ? 'Cash Withdrawal' : 'Cash Deposit'),
-      section: 'current',
-      tx_types: [task],
-      data: { [amtField]: amt, saving_acc_no: accNo, comments: remarks },
-      remarks,
-    };
-    const recRes = await fetch(API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-auth-token': localStorage.getItem('jju_token') || '' },
-      body: JSON.stringify(recPayload),
-    });
-    const recJ = await recRes.json();
-    if (!recRes.ok) throw new Error(recJ.error || recRes.status);
-    const recId = recJ.id;
-
-    // 2. Save cashbook row directly
-    const cbEntry = {
-      date,
-      record_id: recId,
-      name: name || (isWd ? 'Cash Withdrawal' : 'Cash Deposit'),
-      task,
-      acc_type: 'Current Account',
-      tx_type: txType,
-      acc_no: accNo,
-      amount: amt,
-      mode: 'Cash',
-      scroll_no: '',
-      loan_date: '',
-      sort_order: 9999,
-    };
-    const cbRes = await fetch(CB_API + '/bulk', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-auth-token': localStorage.getItem('jju_token') || '' },
-      body: JSON.stringify({ entries: [cbEntry] }),
-    });
-    if (!cbRes.ok) throw new Error('Cashbook save failed: ' + cbRes.status);
-    const cbJ = await cbRes.json();
-    const saved = (cbJ.entries || [])[0];
-    if (saved) {
-      saved._saved = true;
-      ledgerAllRows.push(saved);
-    }
-    if (recId && !ledgerRecords.find(r => r.id === recId)) {
-      ledgerRecords.push({ id: recId, name: recPayload.name, tx_types: [task], date, section: 'current' });
-    }
-    if (!window._autoGenAttempted) window._autoGenAttempted = new Set();
-    window._autoGenAttempted.add(String(recId));
-
-    document.getElementById('cash-entry-modal')?.remove();
-    toast('✅ ' + (isWd ? 'Cash Withdrawal' : 'Cash Deposit') + ' saved — ₹ ' + amt.toLocaleString('en-IN'), 'ok');
-    renderLedger();
-    loadDashboard();
-  } catch (e) {
-    const errEl = document.getElementById('cem-err');
-    if (errEl) { errEl.textContent = 'Error: ' + e.message; errEl.style.display = 'block'; }
-    if (btn) { btn.disabled = false; btn.textContent = '💾 Save ' + (isWd ? 'Withdrawal' : 'Deposit'); }
-  }
-}
-
-// Expose globally so HTML onclick can call them
-window.openCashEntryModal = openCashEntryModal;
-window.saveCashEntry = saveCashEntry;
 
 function renderLedgerCashBook() {
   const rows = ldgFilteredRows().filter(
@@ -9572,8 +9387,11 @@ function _buildSahakaarCashBookHTML({
   const TH = "border:1px solid #555;padding:3px 6px;background:#e8e8e8;font-weight:700;font-size:7pt;text-align:center;";
   const TD = "border:1px solid #aaa;padding:3px 6px;font-size:7pt;";
   const TDC = "border:1px solid #aaa;padding:3px 6px;font-size:7pt;text-align:center;";
-  const TDR = "border:1px solid #aaa;padding:3px 6px;font-size:7pt;text-align:right;";
-  const TDRB = "border:1px solid #aaa;padding:3px 6px;font-size:7pt;text-align:right;font-weight:700;";
+  // BUG FIX (print legibility): the ₹ amount columns shared the same 7pt as
+  // every other cell, making the actual money figures hard to read at print
+  // size — bumped just these two (Particulars/Sr No/Voucher No stay at 7pt).
+  const TDR = "border:1px solid #aaa;padding:3px 6px;font-size:9pt;font-weight:600;text-align:right;";
+  const TDRB = "border:1px solid #aaa;padding:3px 6px;font-size:9pt;text-align:right;font-weight:800;";
   const TOT = "border:1px solid #555;padding:3px 6px;font-size:7pt;font-weight:800;background:#f0f4f8;";
   const TOTR = "border:1px solid #555;padding:3px 6px;font-size:7pt;font-weight:800;background:#f0f4f8;text-align:right;";
   const GRAND = "border:2px solid #333;padding:4px 6px;font-size:7.5pt;font-weight:800;background:#d9eaf7;text-align:right;";
@@ -9627,8 +9445,20 @@ function _buildSahakaarCashBookHTML({
   ).join("") || `<tr><td colspan="3" style="${TDC};color:#999;">—</td></tr>`;
 
   // Balance difference (should be zero)
-  const diff = (denomTotal || closing) - closing;
-  const diffColor = diff === 0 ? "#27ae60" : "#c0392b";
+  // BUG FIX ("Cash Book difference ≠ 0 logic looked wrong"): this used to be
+  // `(denomTotal || closing) - closing`. denomTotal is the sum of whatever is
+  // typed into the denomination boxes on screen, which is legitimately 0
+  // before anyone has filled them in — and 0 is falsy in JS, so `||` silently
+  // substituted `closing` for it, making diff always compute as
+  // closing - closing = 0. That showed a green "✅ 0.00" match even when the
+  // denomination table was completely empty (nothing counted yet), instead
+  // of the real mismatch. Only treat it as reconciled when notes have
+  // actually been entered; otherwise show a neutral "not counted" state
+  // rather than a false match.
+  const hasDenomEntry = denomData.some((r) => r.notes > 0);
+  const diff = hasDenomEntry ? denomTotal - closing : null;
+  const diffColor = diff === null ? "#888" : diff === 0 ? "#27ae60" : "#c0392b";
+  const denomTotalDisplay = hasDenomEntry ? denomTotal : null;
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>रोखवही — ${todayFmt}</title>
@@ -9677,14 +9507,17 @@ function _buildSahakaarCashBookHTML({
          (Sr. No.) column, moved to the front of each side so every row is
          numbered from the first column. -->
     <tr>
-      <th style="${TH}width:6%;">अ.क्र.</th>
-      <th style="${TH}width:8%;">व्हा.नं.</th>
-      <th style="${TH}width:26%;">तपशील / Particulars</th>
+      <!-- BUG FIX (print layout): Sr No / Voucher No columns were wider than
+           the 1-3 digit values they ever hold, crowding the Particulars
+           column — narrowed both and handed the freed width to Particulars. -->
+      <th style="${TH}width:4%;">अ.क्र.</th>
+      <th style="${TH}width:6%;">व्हा.नं.</th>
+      <th style="${TH}width:30%;">तपशील / Particulars</th>
       <th style="${TH}width:9%;text-align:right;">रक्कम (₹)</th>
       <th style="width:3px;background:#333;border:none;padding:0;"></th>
-      <th style="${TH}width:6%;">अ.क्र.</th>
-      <th style="${TH}width:8%;">व्हा.नं.</th>
-      <th style="${TH}width:26%;">तपशील / Particulars</th>
+      <th style="${TH}width:4%;">अ.क्र.</th>
+      <th style="${TH}width:6%;">व्हा.नं.</th>
+      <th style="${TH}width:30%;">तपशील / Particulars</th>
       <th style="${TH}width:9%;text-align:right;">रक्कम (₹)</th>
     </tr>
   </thead>
@@ -9723,7 +9556,7 @@ function _buildSahakaarCashBookHTML({
         <tfoot>
           <tr>
             <td colspan="2" style="${TOT}text-align:center;">एकूण (Total)</td>
-            <td style="${TOTR}">${fmtAmt(denomTotal || closing)}</td>
+            <td style="${TOTR}">${denomTotalDisplay === null ? "—" : fmtAmt(denomTotalDisplay)}</td>
           </tr>
         </tfoot>
       </table>
@@ -9759,11 +9592,11 @@ function _buildSahakaarCashBookHTML({
           </tr>
           <tr>
             <td style="${TD}">नोट तपशील एकूण (Denomination Total)</td>
-            <td style="${TDR}">₹ ${fmtAmt(denomTotal || closing)}</td>
+            <td style="${TDR}">${denomTotalDisplay === null ? "— (not counted)" : "₹ " + fmtAmt(denomTotalDisplay)}</td>
           </tr>
           <tr>
             <td style="${TD}font-weight:700;">फरक (Difference — must be 0)</td>
-            <td style="border:1px solid #aaa;padding:3px 6px;font-size:7pt;text-align:right;font-weight:800;color:${diffColor};">${diff === 0 ? "✅ 0.00" : "⚠ " + fmtAmt(Math.abs(diff))}</td>
+            <td style="border:1px solid #aaa;padding:3px 6px;font-size:7pt;text-align:right;font-weight:800;color:${diffColor};">${diff === null ? "— Not counted" : diff === 0 ? "✅ 0.00" : "⚠ " + fmtAmt(Math.abs(diff))}</td>
           </tr>
         </tbody>
       </table>
@@ -9774,8 +9607,11 @@ function _buildSahakaarCashBookHTML({
 <!-- ══ SIGNATURE LINE ══ -->
 <table style="width:100%;margin-top:6mm;border-collapse:collapse;">
   <tr>
-    ${["रोखपाल (Cashier)", "लेखापाल (Accountant)", "व्यवस्थापक (Manager)", "अध्यक्ष (Chairman)"]
-      .map((lbl) => `<td style="width:25%;border:none;text-align:center;padding:2mm 4mm;">
+    ${["रोखपाल (Cashier)", "लेखापाल (Accountant)", "व्यवस्थापक (Manager)"]
+      // BUG FIX: dropped "अध्यक्ष (Chairman)" per user request — daily cash
+      // book sign-off is Cashier/Accountant/Manager only; rebalanced to 3
+      // equal columns instead of 4.
+      .map((lbl) => `<td style="width:33.33%;border:none;text-align:center;padding:2mm 4mm;">
         <div style="border-top:1.5px solid #333;margin:0 8mm;padding-top:2mm;font-size:7pt;font-weight:700;">${lbl}</div>
       </td>`).join("")}
   </tr>
@@ -10158,14 +9994,17 @@ async function generateAllVouchersPDF() {
     * { box-sizing: border-box; }
     body { font-family: Arial, 'Noto Sans Devanagari', sans-serif; font-size: 8pt; color: #000; margin: 0; }
     .voucher-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5mm; align-items: start; }
+    /* BUG FIX (print legibility): covering-voucher text sized down to 6.3-7pt
+       was hard to read on a printed slip — bumped every size up a couple
+       points while keeping the same compact, natural-height block. */
     .voucher-block { width: 100%; border: 1px solid #999; border-radius: 2px; padding: 1.5mm 2.5mm 1mm; page-break-inside: avoid; break-inside: avoid; }
-    .v-bank { font-size: 6.3pt; text-align: center; font-weight: 700; margin: 0 0 0.5mm; border-bottom: 1px solid #000; padding-bottom: 0.5mm; }
-    .v-sub { font-size: 7pt; font-weight: 600; text-align: center; margin: 0.5mm 0 1mm; color: #333; }
-    .v-table { width: 100%; border-collapse: collapse; font-size: 6.8pt; margin-bottom: 1mm; }
-    .v-table th { border: 1px solid #000; padding: 1px 3px; background: #f0f0f0; font-weight: 700; text-align: left; }
-    .v-table td { border: 1px solid #000; padding: 1px 3px; }
-    .v-total { font-size: 7pt; font-weight: 700; margin: 0.5mm 0; }
-    .v-sig { display: flex; justify-content: space-between; font-size: 7pt; margin-top: 2mm; border-top: 1px dashed #888; padding-top: 0.5mm; }
+    .v-bank { font-size: 8pt; text-align: center; font-weight: 700; margin: 0 0 0.5mm; border-bottom: 1px solid #000; padding-bottom: 0.5mm; }
+    .v-sub { font-size: 9pt; font-weight: 600; text-align: center; margin: 0.5mm 0 1mm; color: #333; }
+    .v-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 1mm; }
+    .v-table th { border: 1px solid #000; padding: 2px 4px; background: #f0f0f0; font-weight: 700; text-align: left; }
+    .v-table td { border: 1px solid #000; padding: 2px 4px; }
+    .v-total { font-size: 9pt; font-weight: 700; margin: 0.5mm 0; }
+    .v-sig { display: flex; justify-content: space-between; font-size: 8.5pt; margin-top: 2mm; border-top: 1px dashed #888; padding-top: 0.5mm; }
     .v-sig-left { text-align: left; }
     .v-sig-left span { margin-top: 3mm !important; min-width: 60px !important; }
     .v-divider { border: none; border-top: 1.5px dashed #555; margin: 3mm 0; }
@@ -10379,8 +10218,6 @@ function _renderCloseSummary(s) {
       html = `<div class="qc-row2" style="margin-top:0;">
         <span class="qc-chip qc-chip-amt">${fmt(s.principal)}</span>
         <span class="qc-chip">${s.days}d</span>
-        <span class="qc-chip qc-chip-interest"${interestTitle}>+${fmt(s.interest)} int</span>
-        <span class="qc-chip qc-chip-total">Total ${fmt(s.total)}</span>
       </div>`;
     } else {
       html =
@@ -13421,19 +13258,36 @@ window.showCustomer360 = async function (recordId) {
       const rec = (window._lastDBRows || []).find((r) => String(r.id) === rid);
       if (!rec) return;
 
+      // BUG FIX: "Customer 360° View shows Customer not found" — this button
+      // used to render on every row and always fall back to the RECORD's own
+      // integer id (rid) when rec.customer_id/cust_code was empty. That id is
+      // meaningless to /api/customers/:id/profile (it's a records.id, not a
+      // customers.id), so it always 404'd. Confirmed live: "bank" section
+      // rows (Cash Withdrawal/Deposit to a bank account — no customer
+      // involved at all) and a batch of legacy PDF-Sync membership rows
+      // (imported with no aadhar/mobile either, so there's no reliable way
+      // to match them to a customer row) both have customer_id/cust_code
+      // genuinely empty. Rather than guess with the wrong id and fail after
+      // a click, skip the button for rows with no real link — a disabled,
+      // explained state instead of a false promise of a profile that can't
+      // be resolved.
+      const profileKey = rec.customer_id || rec.cust_code || null;
+
       const btn = document.createElement("button");
       btn.className = "sb sb-360";
-      btn.title = "Customer 360° View";
-      btn.style.cssText = "background:#eaf3fb;color:#1a5276;";
       btn.textContent = "👤";
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        // FIX: pass customer_id (zero-padded TEXT like "0000003269") not the
-        // record integer id — passing the record id caused the profile endpoint
-        // to do WHERE customers.id=rid and return a completely wrong customer.
-        const profileKey = rec.customer_id || rec.cust_code || rid;
-        window.showCustomer360(profileKey);
-      };
+      if (!profileKey) {
+        btn.title = "No linked customer record for this entry";
+        btn.disabled = true;
+        btn.style.cssText = "background:#f2f2f2;color:#aaa;cursor:not-allowed;";
+      } else {
+        btn.title = "Customer 360° View";
+        btn.style.cssText = "background:#eaf3fb;color:#1a5276;";
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          window.showCustomer360(profileKey);
+        };
+      }
       // Insert as first button
       const firstBtn = abtns.querySelector("button:first-child");
       if (firstBtn) abtns.insertBefore(btn, firstBtn);
@@ -13468,6 +13322,27 @@ window.showCustomer360 = async function (recordId) {
     }
   };
 })();
+
+// BUG FIX / FEATURE (Day-End Summary): each of these print/voucher actions
+// (generateCashBookPDFFromLedger, generateGLIntVoucherManual, etc.) reads
+// module-level ledgerAllRows/cbData, which are only populated for whatever
+// date the Transaction Ledger's own #ldg-date last loaded — not necessarily
+// the date currently shown on Day-End Summary. Calling them directly from
+// here without this sync would silently print/generate for the WRONG date
+// whenever they differ. This mirrors what a user does manually today (open
+// the Ledger tab, set the date, click the tab's own button) so Day-End
+// Summary can offer the same actions without sending them there first.
+async function dayendSyncAndRun(fn) {
+  const date = window._dayendDate;
+  if (!date) {
+    toast("Load Day-End Summary first", "err");
+    return;
+  }
+  const ldgDateEl = document.getElementById("ldg-date");
+  if (ldgDateEl) ldgDateEl.value = date;
+  await loadLedger();
+  await fn();
+}
 
 async function loadDayEnd() {
   const dateEl = document.getElementById("dayend-date");
@@ -13537,6 +13412,33 @@ async function loadDayEnd() {
         <div style="text-align:center;margin-bottom:14px;">
           <div style="font-weight:800;font-size:13pt;">JJU Bank — Day-End Summary</div>
           <div style="font-size:10pt;color:#555;">${fmtD(date)}</div>
+        </div>
+
+        <!-- Quick Print / Voucher Actions — every ledger sub-tab's own
+             print/voucher button, gathered here so a user doesn't have to
+             open each tab individually just to print the day's paperwork. -->
+        <div style="background:#fff;border:1px solid #eee;border-radius:9px;padding:10px 12px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+          <span style="font-size:9px;color:#777;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-right:4px;">🖨️ Quick Print:</span>
+          <button onclick="dayendSyncAndRun(() => generateCashBookPDFFromLedger())"
+            style="background:#1a3a5c;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:9.5pt;font-weight:700;white-space:nowrap">
+            🧾 Print Cash Book
+          </button>
+          <button onclick="dayendSyncAndRun(generateGLIntVoucherManual)"
+            style="background:#1a3a5c;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:9.5pt;font-weight:700;white-space:nowrap">
+            🥇 GL-83 Int Voucher
+          </button>
+          <button onclick="dayendSyncAndRun(generateFDODIntVoucherManual)"
+            style="background:#2b6cb0;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:9.5pt;font-weight:700;white-space:nowrap">
+            📈 FD-OD Int Voucher
+          </button>
+          <button onclick="generateBankTRFVoucherForDate(window._dayendDate, window._dayendBankRows)"
+            style="background:#1a365d;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:9.5pt;font-weight:700;white-space:nowrap">
+            🏦 Bank TRF Vouchers
+          </button>
+          <button onclick="dayendSyncAndRun(generateVouchersPDFFromLedger)"
+            style="background:#553c9a;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:9.5pt;font-weight:700;white-space:nowrap">
+            📋 Covering Vouchers
+          </button>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
@@ -14111,6 +14013,7 @@ async function postMISInterest() {
       box-shadow: 0 10px 30px rgba(0,0,0,.3);
       max-height: 340px;
       overflow-y: auto;
+      overscroll-behavior: contain;
       z-index: 30;
     }
     .qc-suggest-item {
@@ -14437,6 +14340,7 @@ async function postMISInterest() {
   function openQC() {
     inject();
     document.getElementById('qc-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
     setTimeout(function() { var q = document.getElementById('qc-q'); if (q) q.focus(); }, 60);
   }
 
@@ -14447,6 +14351,7 @@ async function postMISInterest() {
   function closeQC() {
     var ov = document.getElementById('qc-overlay');
     if (ov) ov.style.display = 'none';
+    document.body.style.overflow = '';
     resetQC();
   }
 
@@ -14675,8 +14580,6 @@ async function postMISInterest() {
             '<span class="qc-chip qc-chip-amt">' + fmtR(principal) + '</span>' +
             (startDate ? '<span class="qc-chip">' + startDate + '</span>' : '') +
             (calcOk ? '<span class="qc-chip">' + days + 'd</span>' : '') +
-            (calcOk ? '<span class="qc-chip qc-chip-interest"' + (lakhCharge ? ' title="Includes ₹' + lakhCharge + ' handling charge (₹200 per ₹1,00,000, rounded up)"' : '') + '>+' + fmtR(interest) + ' int' + (lakhCharge ? ' *' : '') + '</span>' : '') +
-            (calcOk ? '<span class="qc-chip qc-chip-total">Total ' + fmtR(total) + '</span>' : '') +
             (extraChip ? '<span class="qc-chip">' + extraChip + '</span>' : '') +
           '</div>' +
           (!row.record_id ? '<div class="qc-manual-note">No linked transaction \u2014 close/update from the ' + _qcEsc(sect.label) + ' screen</div>' : '');

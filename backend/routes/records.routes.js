@@ -59,6 +59,7 @@ router.get ('/check-od-acc-no/:no',         canRead('records'), c.checkOdAccNo);
 router.get ('/check-customer-id/:id',       canRead('records'), c.checkCustomerId);
 router.get ('/customer-full-data',           canRead('records'), c.customerFullData);
 router.get ('/customers/:id/profile',        canRead('records'), c.customerProfile);
+router.get ('/statement/:id',                canRead('records'), c.statement);
 router.get ('/loan-holder/:groupNo',        canRead('records'), c.loanHolder);
 router.post('/process-transaction',     canCreate('records'), auditMiddleware('PROCESS_TRANSACTION', 'records'), c.processTransaction);
 // Bulk import can seed/overwrite a large number of rows in one call —

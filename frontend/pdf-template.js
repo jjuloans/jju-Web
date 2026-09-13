@@ -792,6 +792,11 @@ function bankTRFVoucherPage(bankRows, dtFmt, extraHtml) {
     var accNo = r.acc_no || "";
     var amount = parseFloat(r.amount) || 0;
     var scrollNo = r.scroll_no || String(i + 1);
+    // Task #5: rows now include Cash-mode bank entries alongside Transfer —
+    // label each voucher with its own row's mode instead of a hardcoded
+    // "Transfer" (rows built elsewhere with no .mode, e.g. RTGS/synthetic
+    // intRows, keep the prior "Transfer" wording).
+    var modeLabel = r.mode || "Transfer";
 
     return (
       '<div style="page-break-inside:avoid;border-top:1.5px dashed #666;padding-top:8px;margin-top:8px">' +
@@ -803,7 +808,9 @@ function bankTRFVoucherPage(bankRows, dtFmt, extraHtml) {
       (dtFmt || "—") +
       "</div>" +
       "</div>" +
-      '<div style="font-size:9.5pt;margin:2px 0 6px">Voucher for Bank Transactions - Transfer (<strong>' +
+      '<div style="font-size:9.5pt;margin:2px 0 6px">Voucher for Bank Transactions - ' +
+      modeLabel +
+      " (<strong>" +
       dcLabel +
       "</strong>)(* UPI Id- " +
       refText(r) +
@@ -6375,7 +6382,8 @@ function bankTransactionVoucherPage(
         '<div style="flex:1;padding-left:8px;font-size:8pt">' +
         // Date + Account row
         '<div style="display:flex;gap:8px;margin-bottom:3px;align-items:baseline">' +
-        '<span style="font-weight:700;white-space:nowrap">दिनांक:</span><span style="border-bottom:1px solid #000;flex:1;padding-bottom:1px">&nbsp;' +
+        '<span style="font-weight:700;white-space:nowrap">Scroll No:</span><span style="border-bottom:1px solid #000;min-width:16mm;padding-bottom:1px">&nbsp;</span>' +
+        '&nbsp;&nbsp;<span style="font-weight:700;white-space:nowrap">दिनांक:</span><span style="border-bottom:1px solid #000;flex:1;padding-bottom:1px">&nbsp;' +
         dtFmt +
         "</span>" +
         (accNo && accNo !== "—"
@@ -6422,9 +6430,9 @@ function bankTransactionVoucherPage(
             "</span></div>"
           : "") +
         // Signature row
-        '<div style="display:flex;justify-content:space-between;padding-top:4px;margin-top:2px;border-top:1px solid #bbb">' +
-        '<span style="font-size:7.5pt;border-top:1px solid #000;padding-top:2px;margin-top:10px;min-width:38mm;text-align:center;display:block">रोखपाल/व्यवस्थापक</span>' +
-        '<span style="font-size:7.5pt;border-top:1px solid #000;padding-top:2px;margin-top:10px;min-width:38mm;text-align:center;display:block">' +
+        '<div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:8px;border-top:1px solid #bbb">' +
+        '<span style="font-size:7.5pt;border-top:1px solid #000;padding-top:2px;margin-top:18px;min-width:38mm;text-align:center;display:block">रोखपाल/व्यवस्थापक</span>' +
+        '<span style="font-size:7.5pt;border-top:1px solid #000;padding-top:2px;margin-top:18px;min-width:38mm;text-align:center;display:block">' +
         nm +
         " / सही</span>" +
         "</div>" +
@@ -6438,6 +6446,8 @@ function bankTransactionVoucherPage(
       oneSlip(slip1Label, slip1Bg, slip1AccNo, slip1DC, false) +
       '<hr class="sdiv" style="margin:6px 0">' +
       oneSlip(slip2Label, slip2Bg, slip2AccNo, slip2DC, true) +
+      '<hr class="sdiv" style="margin:6px 0">' +
+      mkCertificate() +
       "</div>"
     );
   }
