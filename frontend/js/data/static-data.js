@@ -1201,6 +1201,80 @@ const VOUCHER_TEMPLATE = [
     trf_name: "MAINT - DB - TRF",
     cash_name: null,
   },
+  // ── Membership & Current Account — additional gaps found during audit ──────
+  // Same class of bug as the "Other Bank" cash fix above: these task names
+  // (from CB_TX_ROWS_MAP) had no matching VOUCHER_TEMPLATE entry at all, so
+  // Covering Vouchers silently produced nothing for them. Membership is of
+  // two kinds — Shares account ("New Sadasya") and Nammatra account
+  // ("Naammatr Sabhasad Account") — a customer may hold either or both, and
+  // each drives its own saving-account movement below; labels reuse the
+  // existing Saving Account / Share Capital / Form Fee voucher names since
+  // they represent the same underlying GL accounts, just from a different
+  // originating transaction type.
+  {
+    acc_type: "Saving Account",
+    acc_no: "43",
+    tx_type: "Debit",
+    task: "Sadasya Saving Acc TRF",
+    trf_name: "SAV - DB - TRF",
+    cash_name: "White Slips - CASH",
+  },
+  {
+    acc_type: "Share Capital",
+    acc_no: "34",
+    tx_type: "Credit",
+    task: "Sadasya Share Capital TRF",
+    trf_name: "SHR - CR - TRF",
+    cash_name: "SHR - CR - CASH",
+  },
+  {
+    acc_type: "Form Fees",
+    acc_no: "129-1",
+    tx_type: "Credit",
+    task: "Sadasya Share Form Fee TRF",
+    trf_name: "FORM FEE - CR - TRF",
+    cash_name: "FORM FEE - CR - CASH",
+  },
+  {
+    acc_type: "Saving Account",
+    acc_no: "43",
+    tx_type: "Credit",
+    task: "Saving Account Deposit",
+    trf_name: null,
+    cash_name: "SAV DEP - CR - CASH",
+  },
+  {
+    acc_type: "Saving Acc TRF",
+    acc_no: "43",
+    tx_type: "Debit",
+    task: "Naammatr Saving Acc TRF",
+    trf_name: "SAV - DB - TRF",
+    cash_name: "White Slips - CASH",
+  },
+  {
+    acc_type: "Current Account",
+    acc_no: "42",
+    tx_type: "Debit",
+    task: "Curr Acc - Withdrawal",
+    trf_name: null,
+    cash_name: "CURR ACC - DB - CASH",
+  },
+  {
+    acc_type: "Current Account",
+    acc_no: "42",
+    tx_type: "Credit",
+    task: "Current Acc Deposit",
+    trf_name: null,
+    cash_name: "CURR ACC - CR - CASH",
+  },
+  {
+    acc_type: "Int Received FD",
+    acc_no: "",
+    tx_type: "Credit",
+    task: "Interest Received on FD - TRF",
+    trf_name: "FD INT RECV - CR - TRF",
+    cash_name: "FD INT RECV - CR - CASH",
+  },
 ];
 
 // ── CB_TX_ROWS_MAP ───────────────────────────────────────────────────────────
