@@ -7564,7 +7564,7 @@ ${ldgEditDate(r.id, "loan_date", r.loan_date)}
     const recId = Number(btn.dataset.ldgAddRec);
     const date = btn.dataset.ldgDate || "";
     const rec = ledgerRecords.find((r) => r.id === recId);
-    btn.addEventListener("click", () => ldgAddRowForRecord(recId, rec ? rec.name : "", date));
+    btn.addEventListener("click", () => ldgAddRowForRecord(recId, rec ? rec.name : "", date, rec ? rec.tx_types : null));
   });
   tbody.querySelectorAll("[data-ldg-del-rec]").forEach((btn) => {
     const recId = Number(btn.dataset.ldgDelRec);
@@ -8062,25 +8062,82 @@ async function ldgAddManualRow() {
 }
 
 // Add a new cashbook row linked to a specific parent record
-async function ldgAddRowForRecord(recordId, name, date) {
+async function ldgAddRowForRecord(recordId, name, date, txTypesRaw) {
+  // BUG FIX: this used to hardcode task/acc_type to "Gold Loan TRF" no
+  // matter what kind of record the row was added under — so a row added
+  // under a "Saving Deposit" record showed up mislabeled as a Gold Loan
+  // entry, and (since Template Data/Cash Book aggregation keys off `task`
+  // first, see renderLedgerTemplate()) stayed silently bucketed under
+  // "Gold Loan TRF" even after the acc_type dropdown was corrected inline.
+  // Default from the record's own transaction type(s) instead, using the
+  // same CB_TX_ROWS_MAP template addCashbookRows() itself uses, so a
+  // manually-added row on a Saving Deposit record defaults to task
+  // "Saving Deposit" / acc_type "Saving Account" / mode "Cash" — i.e.
+  // it behaves like every other Saving Deposit cashbook row.
+  const txTypes = parseTxTypes(txTypesRaw);
+  let template = null;
+  for (const t of txTypes) {
+    const rows = CB_TX_ROWS_MAP[t];
+    if (rows && rows.length) {
+      template = rows[0];
+      break;
+    }
+  }
+
   const newRow = {
     id: -Date.now(),
     date: date || document.getElementById("ldg-date").value,
     record_id: recordId,
     name: name || "",
-    task: "Gold Loan TRF",
-    acc_type: "Gold Loan TRF",
-    tx_type: "Debit",
+    task: template ? template.task : "Manual Entry",
+    acc_type: template ? template.acc_type : "Manual Entry",
+    tx_type: template ? template.tx_type : "Debit",
     acc_no: "",
     amount: 0,
-    mode: "Cash",
+    mode: template ? template.mode : "Cash",
     scroll_no: "",
     loan_date: "",
     sort_order: 9999,
     _saved: false,
   };
   ledgerAllRows.push(newRow);
-  toast("Row added under " + (name || "record") + " — edit inline", "ok");
+  renderLedger();
+
+  // BUG FIX ("manually add entry in ledger, reload, it's gone"): this row
+  // used to stay in memory only (_saved: false) with no code path that ever
+  // flushed it to the DB unless the user happened to click a PDF/voucher
+  // button afterward (see the other _flushToDB() callers) — a reload
+  // silently lost it, and ldgSaveCell() also skipped persisting any inline
+  // edit made to it in the meantime, since its isSavedRow check requires
+  // _saved === true. Save it to cashbook_entries immediately instead, the
+  // same way every other ledger row gets created.
+  //
+  // BUG FIX (race with the "🔄 Load" button): loadLedger() unconditionally
+  // REPLACES ledgerAllRows with whatever the server returns
+  // (`ledgerAllRows = (cbJson.entries || []).map(...)`). If someone clicked
+  // Load while this save was still in flight, that replacement happened
+  // before the POST above landed in the DB, so the fresh array never
+  // contained this row — it vanished from the screen even though the save
+  // itself was still going to succeed a moment later (nothing was left to
+  // put it back once ledgerAllRows had already been swapped out). loadLedger
+  // already refuses to run a second time while _ldgLoading is set — holding
+  // that same flag here makes a Load click during this save a no-op instead
+  // of a silent overwrite, so the row is always in place by the time a load
+  // is actually allowed to run.
+  _ldgLoading = true;
+  try {
+    await _flushToDB(newRow.date, [newRow]);
+  } finally {
+    _ldgLoading = false;
+  }
+  if (newRow._saved) {
+    toast("Row added under " + (name || "record") + " — edit inline", "ok");
+  } else {
+    toast(
+      "⚠️ Row added but could not be saved to the database — it will be lost on reload",
+      "err",
+    );
+  }
   renderLedger();
 }
 
