@@ -1958,6 +1958,22 @@ function ornGetItems() {
 
 function buildForm() {
   if (!checked.size) return;
+  // ── Preserve already-entered data across a form rebuild ─────────────────────
+  // BUG FIX: staff would sometimes forget to check "Saving Account" / "Shares
+  // Account" (or any other type) before filling the form, then have to check it
+  // afterward — which used to rebuild the form from scratch and wipe every value
+  // already typed in, forcing them to redo the whole entry. We snapshot the
+  // current form's field values and any uploaded photos before rebuilding, then
+  // restore them onto matching fields below (id="f-..." in the new HTML) once
+  // the new form is in the DOM. This does NOT leak across separate customers/
+  // transactions: clearForm() (called after every successful save, and by
+  // "Select None") empties #form-card first, so there is nothing to restore.
+  const _prevFieldValues = {};
+  document.querySelectorAll('#form-card [id^="f-"]').forEach((el) => {
+    if (el.type === "file") return; // photo inputs — handled via `photos` below
+    if (el.value) _prevFieldValues[el.id] = el.value;
+  });
+  const _prevPhotos = Object.assign({}, photos);
   photos = {};   // ── Fix: clear photos so previous form photos don't carry over ──
   _photoFormGen++;
   const txArr = [...checked];
@@ -2256,6 +2272,27 @@ function buildForm() {
   document.getElementById("form-empty").style.display = "none";
   document.getElementById("action-bar").classList.add("show");
   card.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // ── Restore values/photos snapshotted above (see comment at top of function) ──
+  // Only fills fields that came back empty, so this never overwrites a fresh
+  // default and never blocks the auto-suggest-next-account-number logic below
+  // (those functions already skip when their field is non-empty).
+  Object.keys(_prevFieldValues).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = _prevFieldValues[id];
+  });
+  Object.keys(_prevPhotos).forEach((fid) => {
+    const pbox = document.getElementById("pbox-" + fid);
+    if (pbox) {
+      photos[fid] = _prevPhotos[fid];
+      pbox.innerHTML = _photoBoxFilledHtml(fid, _prevPhotos[fid]);
+    }
+  });
+  // Ornament items table is stored as JSON in the hidden f-ornament_items field
+  // restored above — re-render its visible table/chip UI to match.
+  if (_prevFieldValues["f-ornament_items"] && document.getElementById("f-ornament_items")) {
+    try { ornRenderTable(); ornRenderChips(); ornUpdateSummary(); } catch (e) {}
+  }
   // Auto-focus customer name field for gold loan section
   if (section === "gold") {
     setTimeout(function () {
