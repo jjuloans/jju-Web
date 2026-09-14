@@ -87,7 +87,13 @@ async function list(req, res) {
     const limitParam  = pi;
     const offsetParam = pi + 1;
     const { rows } = await pool.query(
-      `SELECT id, date, entry_date, record_id, name, task, acc_type, tx_type,
+      // BUG FIX: parent_id was missing here (unlike bulkInsert's own SELECT/
+      // RETURNING lists a few lines down, which already include it) — the
+      // frontend uses parent_id to group multiple manual-entry rows under one
+      // ledger banner, and without it every GET /api/cashbook silently threw
+      // that grouping away, so grouped manual rows fell back to one banner
+      // per row again after every reload.
+      `SELECT id, date, entry_date, parent_id, record_id, name, task, acc_type, tx_type,
               acc_no, amount, mode, scroll_no, loan_date, sort_order,
               is_deleted, deleted_at, created_at, updated_at
        FROM cashbook_entries

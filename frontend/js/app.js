@@ -7555,31 +7555,62 @@ function renderLedgerMain() {
     });
   });
 
-  // Orphan / manual rows (no parent record) — each one added via the
-  // standalone "+ Add Row" button at the top of this tab (ldgAddManualRow())
-  // used to render as a single bare table row with no heading, unlike every
-  // record-backed entry above, which gets its own "CustomerName — Task"
-  // banner row. Give each manual entry the same banner treatment (name +
-  // a "Manual Entry" badge, styled like the other group headers) so it
-  // reads the same way as everything else in this tab, followed by its one
-  // editable row exactly as before.
-  (byRec["_manual_"] || []).forEach((r) => {
-    const txBg =
-      r.tx_type === "Credit"
-        ? "background:#d4f5e9;color:#2a7a50;"
-        : "background:#fde0e8;color:#c0392b;";
-    const modeBg =
-      r.mode === "Transfer"
-        ? "background:#e8f4fd;color:#2b6cb0;"
-        : "background:#fff8e1;color:#b7791f;";
+  // Orphan / manual rows (no parent record) — added via the standalone
+  // "+ Add Row" button at the top of this tab (ldgAddManualRow()). Grouped by
+  // parent_id so a manual entry can hold more than one row under a single
+  // banner, the same way a real record's rows do: the first row of a group
+  // has parent_id=null and IS the anchor; every row added afterward via that
+  // banner's own "+ Add Row" (ldgAddRowForManualGroup()) carries parent_id
+  // set to the anchor's real DB id. A manual entry with just one row (the
+  // common case) still renders exactly as before — one banner, one row —
+  // just with "+ Add Row" / delete-group buttons now available on it too,
+  // matching every record-backed banner above.
+  const manualRows = byRec["_manual_"] || [];
+  const manualGroups = {};
+  const manualGroupOrder = [];
+  manualRows.forEach((r) => {
+    const gid = r.parent_id || r.id;
+    if (!manualGroups[gid]) {
+      manualGroups[gid] = [];
+      manualGroupOrder.push(gid);
+    }
+    manualGroups[gid].push(r);
+  });
+  manualGroupOrder.forEach((gid) => {
+    const grp = manualGroups[gid];
+    const anchor = grp.find((r) => !r.parent_id) || grp[0];
+    const mName = anchor.name || "Manual Entry";
+    const mNameAttr = mName.replace(/"/g, "&quot;");
+    const mDate = anchor.date || document.getElementById("ldg-date")?.value || "";
+    const rowIds = grp.map((r) => r.id).join(",");
     html += `<tr style="background:#f0fff4;border-left:4px solid var(--mint-a);border-top:2px solid var(--mint-a)">
 <td colspan="10" style="padding:6px 10px">
-  <span style="font-weight:800;font-size:10pt;color:#1a5c3a">${r.name || "Manual Entry"}</span>
-  <span style="color:#ccc;margin:0 6px">—</span>
-  <span style="background:var(--lav);color:var(--lav-a);padding:2px 9px;border-radius:5px;font-size:8pt;font-weight:800">Manual Entry</span>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+    <span>
+      <span style="font-weight:800;font-size:10pt;color:#1a5c3a">${mName}</span>
+      <span style="color:#ccc;margin:0 6px">—</span>
+      <span style="background:var(--lav);color:var(--lav-a);padding:2px 9px;border-radius:5px;font-size:8pt;font-weight:800">Manual Entry</span>
+    </span>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button data-ldg-add-manual="${anchor.id}" data-ldg-manual-name="${mNameAttr}" data-ldg-date="${mDate}"
+        style="background:#553c9a;color:#fff;border:none;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:9pt;font-weight:700;white-space:nowrap">+ Add Row</button>
+      <button data-ldg-del-manual="${rowIds}" data-ldg-manual-name="${mNameAttr}"
+        title="Delete this manual entry (can be restored from Recycle Bin)"
+        style="background:#fde0e8;color:#c0392b;border:1px solid #f5a0b0;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;white-space:nowrap">🗑️</button>
+    </div>
+  </div>
 </td>
     </tr>`;
-    html += `<tr data-cb-id="${r.id}" style="background:#fff;border-left:3px solid var(--mint-a)">
+    grp.forEach((r) => {
+      const txBg =
+        r.tx_type === "Credit"
+          ? "background:#d4f5e9;color:#2a7a50;"
+          : "background:#fde0e8;color:#c0392b;";
+      const modeBg =
+        r.mode === "Transfer"
+          ? "background:#e8f4fd;color:#2b6cb0;"
+          : "background:#fff8e1;color:#b7791f;";
+      html += `<tr data-cb-id="${r.id}" style="background:#fff;border-left:3px solid var(--mint-a)">
 <td style="text-align:center;color:#aaa;padding-left:16px;font-size:9pt">${txNo++}</td>
 <td>${r.name || "Manual"}</td>
 ${ldgEditSel(r.id, "acc_type", r.acc_type || r.task, LDG_ACC_TYPES, null)}
@@ -7604,6 +7635,7 @@ ${ldgEditDate(r.id, "loan_date", r.loan_date)}
     style="background:#fde0e8;color:#c0392b;border:none;border-radius:4px;padding:2px 7px;cursor:pointer;font-size:11px">🗑</button>
 </td>
     </tr>`;
+    });
   });
 
   tbody.innerHTML =
@@ -7625,6 +7657,17 @@ ${ldgEditDate(r.id, "loan_date", r.loan_date)}
   tbody.querySelectorAll("[data-ldg-del-row]").forEach((btn) => {
     const rowId = Number(btn.dataset.ldgDelRow);
     btn.addEventListener("click", () => ldgDeleteRow(rowId));
+  });
+  tbody.querySelectorAll("[data-ldg-add-manual]").forEach((btn) => {
+    const anchorId = Number(btn.dataset.ldgAddManual);
+    const name = btn.dataset.ldgManualName || "";
+    const date = btn.dataset.ldgDate || "";
+    btn.addEventListener("click", () => ldgAddRowForManualGroup(anchorId, name, date));
+  });
+  tbody.querySelectorAll("[data-ldg-del-manual]").forEach((btn) => {
+    const ids = (btn.dataset.ldgDelManual || "").split(",").filter(Boolean);
+    const name = btn.dataset.ldgManualName || "";
+    btn.addEventListener("click", () => ldgSoftDeleteManualGroup(ids, name));
   });
 }
 
@@ -8135,6 +8178,95 @@ async function ldgAddManualRow() {
     );
   }
   renderLedger();
+}
+
+// Add another row to an existing manual entry (its banner's own "+ Add Row"
+// button — see the "Manual rows" grouping block in renderLedger()). `anchorId`
+// is the group's first row's real DB id; every row sharing a group stores
+// parent_id = anchorId, which is how they get re-grouped under one banner
+// both immediately and after a reload (parent_id is persisted — see the
+// bulkInsert/list BUG FIX comments in cashbook.controller.js).
+async function ldgAddRowForManualGroup(anchorId, name, date) {
+  const newRow = {
+    id: -Date.now(),
+    date: date || document.getElementById("ldg-date").value,
+    record_id: null,
+    parent_id: anchorId,
+    name: name || "",
+    task: "Manual Entry",
+    acc_type: "",
+    tx_type: "Credit",
+    acc_no: "",
+    amount: 0,
+    mode: "Cash",
+    scroll_no: "",
+    loan_date: "",
+    sort_order: 9999,
+    _saved: false,
+  };
+  ledgerAllRows.push(newRow);
+  renderLedger();
+
+  _ldgLoading = true;
+  try {
+    await _flushToDB(newRow.date, [newRow]);
+  } finally {
+    _ldgLoading = false;
+  }
+  if (newRow._saved) {
+    toast("Row added — edit inline below", "ok");
+  } else {
+    toast(
+      "⚠️ Row added but could not be saved to the database — it will be lost on reload",
+      "err",
+    );
+  }
+  renderLedger();
+}
+
+// Delete every row of a manual entry in one go (the banner's own "🗑" button),
+// instead of removing each row individually. Mirrors ldgSoftDeleteRecord()'s
+// confirm/soft-delete/recycle-bin pattern but for cashbook_entries rows that
+// have no backing parent record.
+async function ldgSoftDeleteManualGroup(rowIds, name) {
+  if (!rowIds || !rowIds.length) return;
+  if (
+    !confirm(
+      `Move this manual entry ("${name || "Manual Entry"}") and its ${rowIds.length} row(s) to Recycle Bin?\n\nYou can restore them from the Recycle Bin tab.`,
+    )
+  )
+    return;
+
+  let failed = 0;
+  for (const id of rowIds) {
+    const row = ledgerAllRows.find((r) => String(r.id) === String(id));
+    if (!row) continue;
+    if (row._saved && Number(id) > 0) {
+      try {
+        const delRes = await fetch(CB_API + "/" + id + "/soft-delete", {
+          method: "PATCH",
+          headers: { "x-auth-token": localStorage.getItem("jju_token") || "" },
+        });
+        if (!delRes.ok) {
+          failed++;
+          continue;
+        }
+      } catch (e) {
+        failed++;
+        continue;
+      }
+    }
+    row._deleted = true;
+    row._deleted_at = new Date().toISOString();
+    cbRecycleBin.unshift(row);
+  }
+  ledgerAllRows = ledgerAllRows.filter((r) => !r._deleted);
+  renderLedger();
+  if (failed) {
+    toast(`⚠️ Moved some rows, but ${failed} failed to delete on the server`, "err");
+  } else {
+    toast(`🗑️ Moved "${name || "Manual Entry"}" (${rowIds.length} row(s)) to Recycle Bin`, "ok");
+  }
 }
 
 // Add a new cashbook row linked to a specific parent record

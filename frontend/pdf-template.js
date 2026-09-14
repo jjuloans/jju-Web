@@ -2543,6 +2543,16 @@ function _goldLoanSlipsPage(
     '<table style="width:100%;border-collapse:collapse;font-size:9.5pt;border-top:1px solid #ddd"><tr><td style="border:1px solid #000;padding:3px 8px;font-weight:700;width:30%;background:#f8f8f8">खातेदाराचे नाव</td><td style="border:1px solid #000;padding:3px 8px;font-weight:800;font-size:10pt" colspan="2">' +
     nm +
     '</td></tr><tr><td style="border:1px solid #000;padding:3px 8px;font-weight:700;background:#f8f8f8">स्टेशनरी फि</td><td style="border:1px solid #000;padding:3px 8px;font-weight:800">रू. 50 /-</td><td style="border:1px solid #000;padding:3px 8px;font-weight:700">( अक्षरी पन्नास फक्त )</td></tr></table>';
+  // Notes denomination table on the left, same placement/style as slip 4
+  // below (_jjuDenomTable — one row per denomination) — this is a cash
+  // ("CR - CASH") slip, so the teller needs somewhere to tally the notes
+  // handed in, same as every other cash slip in the app. Total pre-filled at
+  // ₹50 since the stationery fee is a fixed amount (unlike slip 4's blank
+  // total, whose amount is handwritten).
+  var slip3DenomLeft =
+    '<div style="min-width:40mm;padding:4px 0 4px 8px">' +
+    _jjuDenomTable("#e8f8f0", "₹ 50") +
+    "</div>";
   var slip3 =
     '<div class="sblock">' +
     orgHdr() +
@@ -2551,7 +2561,12 @@ function _goldLoanSlipsPage(
       "GL - FORM FEE - CR - CASH",
     ) +
     slip3ScrollTbl +
+    '<div style="display:flex;align-items:flex-start;gap:0">' +
+    slip3DenomLeft +
+    '<div style="flex:1;min-width:0">' +
     slip3Table +
+    "</div>" +
+    "</div>" +
     sigFooter3() +
     "</div>";
 
@@ -2670,8 +2685,16 @@ function _goldLoanSlipsPage(
     "</div>" +
     "</div>";
 
+  // Scale reduced from 0.9 to 0.80 after adding slip 3's left-side notes-
+  // denomination table (same _jjuDenomTable() style/placement as slip 4):
+  // measured via headless-Chrome render, this taller left-side table style
+  // pushed the 4 slips to ~295mm at the original 0.9 scale — over the ~277mm
+  // printable A4 height. 0.80 measured at ~263mm, restoring a real safety
+  // margin (checked against both short and unusually long test names); width
+  // compensated to 1/0.80 so the scaled box still spans the full printable
+  // content width.
   return (
-    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.9);transform-origin:top left;width:111.1%">' +
+    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.80);transform-origin:top left;width:125%">' +
     slip1 +
     '<div class="sdiv" style="margin:4px 0"></div>' +
     slip2 +
