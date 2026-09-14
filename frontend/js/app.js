@@ -9878,20 +9878,38 @@ async function generateAllVouchersPDF() {
     "जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसा. मर्या. जळगाव जामोद र.नं.१०६७";
 
   // Build per-task totals split by Cash / Transfer
+  // BUG FIX: keyed by task alone, a same-day Credit AND Debit transaction
+  // sharing the same task/account (e.g. a bank account both receiving and
+  // paying out on the same date) got summed together into one bucket, so
+  // the Credit voucher and the Debit voucher both showed the SAME
+  // (wrong, merged) total, and getDetailRows() below returned every name
+  // from both directions under each voucher. Keying by task+tx_type keeps
+  // Credit and Debit fully separate, matching the same task+tx_type key
+  // convention already used for the Excel export a few hundred lines up.
   const taskTrf = {},
     taskCash = {};
   d.txRows.forEach((r) => {
     if (!r.task || !r.amount) return;
+    const key = r.task + "|" + (r.txType || "");
     if (r.mode === "Transfer")
-      taskTrf[r.task] = (taskTrf[r.task] || 0) + r.amount;
+      taskTrf[key] = (taskTrf[key] || 0) + r.amount;
     if (r.mode === "Cash")
-      taskCash[r.task] = (taskCash[r.task] || 0) + r.amount;
+      taskCash[key] = (taskCash[key] || 0) + r.amount;
   });
 
-  // Build detailed rows from txRows for a specific task + mode
-  function getDetailRows(taskName, mode) {
+  // Build detailed rows from txRows for a specific task + mode + tx_type
+  // (tx_type included for the same reason as the key fix above — without
+  // it, both the Credit and Debit voucher for the same task would list
+  // every name from both directions).
+  function getDetailRows(taskName, mode, txType) {
     return d.txRows
-      .filter((r) => r.task === taskName && r.mode === mode && r.amount > 0)
+      .filter(
+        (r) =>
+          r.task === taskName &&
+          r.mode === mode &&
+          r.txType === txType &&
+          r.amount > 0,
+      )
       .map((r) => ({
         scrollNo: r.scrollNo,
         name: r.name,
@@ -10012,12 +10030,13 @@ async function generateAllVouchersPDF() {
   const displayDate = fmtDate(dateStr);
 
   VOUCHER_TEMPLATE.forEach((v) => {
-    const trfAmt = taskTrf[v.task] || 0;
-    const cashAmt = taskCash[v.task] || 0;
+    const voucherKey = v.task + "|" + (v.tx_type || "");
+    const trfAmt = taskTrf[voucherKey] || 0;
+    const cashAmt = taskCash[voucherKey] || 0;
 
     // Cash voucher (e.g. Pink Slip - CASH)
     if (v.cash_name && cashAmt > 0) {
-      const rows = getDetailRows(v.task, "Cash");
+      const rows = getDetailRows(v.task, "Cash", v.tx_type);
       pages += buildVoucherBlock(
         v.acc_type,
         v.acc_no,
@@ -10032,7 +10051,7 @@ async function generateAllVouchersPDF() {
 
     // Transfer voucher (e.g. SAV - CR - TRF)
     if (v.trf_name && trfAmt > 0) {
-      const rows = getDetailRows(v.task, "Transfer");
+      const rows = getDetailRows(v.task, "Transfer", v.tx_type);
       pages += buildVoucherBlock(
         v.acc_type,
         v.acc_no,
@@ -10060,9 +10079,10 @@ async function generateAllVouchersPDF() {
 
   // Bank transfer vouchers (no cash_name/trf_name — pure Transfer rows)
   VOUCHER_TEMPLATE.filter((v) => !v.trf_name && !v.cash_name).forEach((v) => {
-    const trfAmt = taskTrf[v.task] || 0;
+    const voucherKey = v.task + "|" + (v.tx_type || "");
+    const trfAmt = taskTrf[voucherKey] || 0;
     if (trfAmt <= 0) return;
-    const rows = getDetailRows(v.task, "Transfer");
+    const rows = getDetailRows(v.task, "Transfer", v.tx_type);
     pages += buildVoucherBlock(
       v.acc_type,
       v.acc_no,
