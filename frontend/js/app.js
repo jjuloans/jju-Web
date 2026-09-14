@@ -7518,7 +7518,14 @@ function renderLedgerMain() {
     });
   });
 
-  // Orphan / manual rows (no parent record)
+  // Orphan / manual rows (no parent record) — each one added via the
+  // standalone "+ Add Row" button at the top of this tab (ldgAddManualRow())
+  // used to render as a single bare table row with no heading, unlike every
+  // record-backed entry above, which gets its own "CustomerName — Task"
+  // banner row. Give each manual entry the same banner treatment (name +
+  // a "Manual Entry" badge, styled like the other group headers) so it
+  // reads the same way as everything else in this tab, followed by its one
+  // editable row exactly as before.
   (byRec["_manual_"] || []).forEach((r) => {
     const txBg =
       r.tx_type === "Credit"
@@ -7528,8 +7535,15 @@ function renderLedgerMain() {
       r.mode === "Transfer"
         ? "background:#e8f4fd;color:#2b6cb0;"
         : "background:#fff8e1;color:#b7791f;";
-    html += `<tr data-cb-id="${r.id}" style="background:#f0fff4;border-left:3px solid var(--mint-a)">
-<td style="text-align:center;font-size:9pt">${txNo++}</td>
+    html += `<tr style="background:#f0fff4;border-left:4px solid var(--mint-a);border-top:2px solid var(--mint-a)">
+<td colspan="10" style="padding:6px 10px">
+  <span style="font-weight:800;font-size:10pt;color:#1a5c3a">${r.name || "Manual Entry"}</span>
+  <span style="color:#ccc;margin:0 6px">—</span>
+  <span style="background:var(--lav);color:var(--lav-a);padding:2px 9px;border-radius:5px;font-size:8pt;font-weight:800">Manual Entry</span>
+</td>
+    </tr>`;
+    html += `<tr data-cb-id="${r.id}" style="background:#fff;border-left:3px solid var(--mint-a)">
+<td style="text-align:center;color:#aaa;padding-left:16px;font-size:9pt">${txNo++}</td>
 <td>${r.name || "Manual"}</td>
 ${ldgEditSel(r.id, "acc_type", r.acc_type || r.task, LDG_ACC_TYPES, null)}
 <td><select data-id="${r.id}" data-field="tx_type"
@@ -8057,7 +8071,32 @@ async function ldgAddManualRow() {
     _saved: false,
   };
   ledgerAllRows.push(newRow);
-  toast("Row added — edit inline below", "ok");
+  renderLedger();
+
+  // BUG FIX (same root cause as ldgAddRowForRecord() below, and the one
+  // actually reported: "manual entry gone on reload"): this standalone
+  // "+ Add Row" button at the top of the Main Data tab is what people
+  // actually use for a one-off manual line with no parent record — it had
+  // the identical bug, just never wired to any flush path at all, so it
+  // never survived a reload. Save it to cashbook_entries immediately, the
+  // same way every other ledger row gets created; hold _ldgLoading during
+  // the save so a "🔄 Load" click that lands mid-save can't wipe it out
+  // before the save has landed in the DB (loadLedger() already no-ops
+  // while this flag is set).
+  _ldgLoading = true;
+  try {
+    await _flushToDB(newRow.date, [newRow]);
+  } finally {
+    _ldgLoading = false;
+  }
+  if (newRow._saved) {
+    toast("Row added — edit inline below", "ok");
+  } else {
+    toast(
+      "⚠️ Row added but could not be saved to the database — it will be lost on reload",
+      "err",
+    );
+  }
   renderLedger();
 }
 

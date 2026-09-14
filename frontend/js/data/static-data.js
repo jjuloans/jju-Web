@@ -830,6 +830,128 @@ const VOUCHER_TEMPLATE = [
     trf_name: null,
     cash_name: null,
   },
+  // ── Bank accounts — Cash leg ────────────────────────────────────────────────
+  // BUG FIX: "Other Bank - Cash Withdrawal/Deposit" records (see
+  // CB_TX_ROWS_MAP) generate cashbook rows with mode "Cash" and task suffix
+  // "<bank> - Deposit" (Credit, cash comes into the till) or
+  // "<bank> - Withdrawal" (Debit, cash leaves the till) — but every bank
+  // entry above only defines the "- TRF" (Transfer) task with
+  // trf_name/cash_name both null, so these Cash-mode rows matched NO
+  // VOUCHER_TEMPLATE entry at all and Covering Vouchers silently generated
+  // nothing for them. Added the matching Cash entries below (task names
+  // taken from the bank_acc_name dropdown options, static-data.js ~L375).
+  {
+    acc_type: "BU Curr(21-260)",
+    acc_no: "945-2",
+    tx_type: "Credit",
+    task: "Buldhana Urban Bank - Current Acc (015002100000260) - Deposit",
+    trf_name: null,
+    cash_name: "BU CURR - CR - CASH",
+  },
+  {
+    acc_type: "BU Curr(21-260)",
+    acc_no: "945-2",
+    tx_type: "Debit",
+    task: "Buldhana Urban Bank - Current Acc (015002100000260) - Withdrawal",
+    trf_name: null,
+    cash_name: "BU CURR - DB - CASH",
+  },
+  {
+    acc_type: "BoM FD-OD(**691)",
+    acc_no: "946-2",
+    tx_type: "Credit",
+    task: "Bank of Maha - FD-OD (60494510691) - Deposit",
+    trf_name: null,
+    cash_name: "BOM FD-OD - CR - CASH",
+  },
+  {
+    acc_type: "BoM FD-OD(**691)",
+    acc_no: "946-2",
+    tx_type: "Debit",
+    task: "Bank of Maha - FD-OD (60494510691) - Withdrawal",
+    trf_name: null,
+    cash_name: "BOM FD-OD - DB - CASH",
+  },
+  {
+    acc_type: "BoM Curr(**699)",
+    acc_no: "288-1",
+    tx_type: "Credit",
+    task: "Bank of Maha - Current Acc (60438097699) - Deposit",
+    trf_name: null,
+    cash_name: "BOM CURR - CR - CASH",
+  },
+  {
+    acc_type: "BoM Curr(**699)",
+    acc_no: "288-1",
+    tx_type: "Debit",
+    task: "Bank of Maha - Current Acc (60438097699) - Withdrawal",
+    trf_name: null,
+    cash_name: "BOM CURR - DB - CASH",
+  },
+  {
+    acc_type: "NUB Curr(21-926)",
+    acc_no: "926-2",
+    tx_type: "Credit",
+    task: "THE N.U. BANK Current Acc (003002100000926) - Deposit",
+    trf_name: null,
+    cash_name: "NUB CURR - CR - CASH",
+  },
+  {
+    acc_type: "NUB Curr(21-926)",
+    acc_no: "926-2",
+    tx_type: "Debit",
+    task: "THE N.U. BANK Current Acc (003002100000926) - Withdrawal",
+    trf_name: null,
+    cash_name: "NUB CURR - DB - CASH",
+  },
+  {
+    acc_type: "Rajarshi Curr(7-46)",
+    acc_no: "960-2",
+    tx_type: "Credit",
+    task: "Rajarshi Shahu Curr (03202007000046) - Deposit",
+    trf_name: null,
+    cash_name: "RAJARSHI CURR - CR - CASH",
+  },
+  {
+    acc_type: "Rajarshi Curr(7-46)",
+    acc_no: "960-2",
+    tx_type: "Debit",
+    task: "Rajarshi Shahu Curr (03202007000046) - Withdrawal",
+    trf_name: null,
+    cash_name: "RAJARSHI CURR - DB - CASH",
+  },
+  {
+    acc_type: "Sahyog Curr(952-2)",
+    acc_no: "952-2",
+    tx_type: "Credit",
+    task: "The Sahyog Urban Curr Acc (8001173) - Deposit",
+    trf_name: null,
+    cash_name: "SAHYOG CURR - CR - CASH",
+  },
+  {
+    acc_type: "Sahyog Curr(952-2)",
+    acc_no: "952-2",
+    tx_type: "Debit",
+    task: "The Sahyog Urban Curr Acc (8001173) - Withdrawal",
+    trf_name: null,
+    cash_name: "SAHYOG CURR - DB - CASH",
+  },
+  {
+    acc_type: "SBI Curr(*9097)",
+    acc_no: "953-1",
+    tx_type: "Credit",
+    task: "SBI Current Acc (43227989097) - Deposit",
+    trf_name: null,
+    cash_name: "SBI CURR - CR - CASH",
+  },
+  {
+    acc_type: "SBI Curr(*9097)",
+    acc_no: "953-1",
+    tx_type: "Debit",
+    task: "SBI Current Acc (43227989097) - Withdrawal",
+    trf_name: null,
+    cash_name: "SBI CURR - DB - CASH",
+  },
   // ── Special accounts ───────────────────────────────────────────────────────
   {
     acc_type: "Loan Form Fee",
