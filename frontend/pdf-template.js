@@ -2414,24 +2414,24 @@ function _goldLoanSlipsPage(
   silvOrn,
 ) {
   function orgHdr() {
-    return '<div style="padding:6px 10px 4px;border-bottom:1.5px solid #000"><div style="font-family:\'Noto Serif Devanagari\',serif;font-size:12pt;font-weight:700;color:#8b0000;line-height:1.3">जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसा.<span style="font-size:9.5pt;color:#000">मर्या. जळगाव (जा.)जि.बुलढाणा र.नं.१०६७</span></div></div>';
+    return '<div style="padding:5px 10px 3px;border-bottom:1.5px solid #000"><div style="font-family:\'Noto Serif Devanagari\',serif;font-size:14.5pt;font-weight:700;color:#8b0000;line-height:1.3">जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसा.<span style="font-size:12pt;color:#000">मर्या. जळगाव (जा.)जि.बुलढाणा र.नं.१०६७</span></div></div>';
   }
   function titleBar(leftText, code) {
     return (
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 8px;border-bottom:1px solid #000;font-size:8.5pt;font-weight:700"><span>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 8px;border-bottom:1px solid #000;font-size:11pt;font-weight:700"><span>' +
       leftText +
-      '</span><span style="font-weight:800;font-size:9pt">( ' +
+      '</span><span style="font-weight:800;font-size:11.5pt">( ' +
       code +
       " )</span></div>"
     );
   }
   function scrollTbl(col3Label, col3Val, dcLabel) {
     var th =
-      "border:1px solid #000;padding:2px 5px;font-weight:800;text-align:left;font-size:8pt;background:#fff";
+      "border:1px solid #000;padding:2px 5px;font-weight:800;text-align:left;font-size:10.5pt;background:#fff";
     var td =
-      "border:1px solid #000;padding:2px 5px;font-weight:800;font-size:8.5pt";
+      "border:1px solid #000;padding:2px 5px;font-weight:800;font-size:11pt";
     return (
-      '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:9pt;border-top:1px solid #000"><tr><th style="' +
+      '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:11pt;border-top:1px solid #000"><tr><th style="' +
       th +
       ';width:13%">Scroll No</th><th style="' +
       th +
@@ -2466,7 +2466,7 @@ function _goldLoanSlipsPage(
   }
   function sigFooter3() {
     return (
-      '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:2px 10px 3px;border-top:1px solid #ddd;font-size:8pt"><div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:34px;min-width:55mm">रोखपाल/खातेपाल / व्यवस्थापक/अधिकारी</div></div><div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:34px;min-width:45mm;font-weight:800;font-size:8.5pt">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:2px 10px 3px;border-top:1px solid #ddd;font-size:10pt"><div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:28px;min-width:55mm">रोखपाल/खातेपाल / व्यवस्थापक/अधिकारी</div></div><div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:28px;min-width:45mm;font-weight:800;font-size:10.5pt">' +
       nm +
       "</div></div></div>"
     );
@@ -2474,7 +2474,7 @@ function _goldLoanSlipsPage(
 
   // SLIP 1: GL-DB-TRF
   var slip1Body =
-    '<div style="padding:3px 10px 2px;font-size:9pt;line-height:1.6;position:relative"><div style="position:absolute;top:4px;right:10px;width:12mm;height:14mm;border:1.5px solid #aaa;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><span style="font-size:7pt;color:#aaa">Photo</span></div><div style="margin-right:16mm">श्री / श्रीमती <strong>' +
+    '<div style="padding:3px 10px 2px;font-size:11pt;line-height:1.45;position:relative"><div style="position:absolute;top:4px;right:10px;width:12mm;height:14mm;border:1.5px solid #aaa;background:#f0f0f0;display:flex;align-items:center;justify-content:center"><span style="font-size:8pt;color:#aaa">Photo</span></div><div style="margin-right:16mm">श्री / श्रीमती <strong>' +
     nm +
     "</strong> यास अगर<br>घेऊन येणाऱ्यास ……………………………………कर्ज रक्कम रू. <strong>" +
     lnAmt +
@@ -2482,12 +2482,10 @@ function _goldLoanSlipsPage(
     lnWrd +
     " )</strong> देण्याचे करावे.<br>खातेदाराचे नाव <strong>" +
     nm +
-    '</strong></div></div><div style="text-align:right;padding:0 12px 3px;font-size:8.5pt;font-weight:800">' +
-    nm +
-    " ………</div>" +
-    '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:2px 10px 3px;border-top:1px solid #ddd;font-size:8pt">' +
-    '<div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:34px;min-width:55mm">रोखपाल/खातेपाल / व्यवस्थापक/अधिकारी</div></div>' +
-    '<div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:34px;min-width:45mm;font-weight:800;font-size:8.5pt">' +
+    '</strong></div></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:2px 10px 3px;border-top:1px solid #ddd;font-size:10pt">' +
+    '<div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:28px;min-width:55mm">रोखपाल/खातेपाल / व्यवस्थापक/अधिकारी</div></div>' +
+    '<div style="text-align:center"><div style="border-top:1.5px solid #000;padding-top:3px;margin-top:28px;min-width:45mm;font-weight:800;font-size:10.5pt">' +
     nm +
     "</div></div>" +
     "</div>";
@@ -2501,11 +2499,11 @@ function _goldLoanSlipsPage(
 
   // SLIP 2: SAV-CR-TRF
   var lbl2 =
-    "background:#e8f8f0;font-weight:600;text-align:center;border:1px solid #000;padding:4px 8px;font-size:8.5pt;vertical-align:middle";
+    "background:#e8f8f0;font-weight:600;text-align:center;border:1px solid #000;padding:4px 8px;font-size:10.5pt;vertical-align:middle";
   var val2 =
-    "font-weight:800;border:1px solid #000;padding:4px 8px;font-size:9.5pt;vertical-align:middle";
+    "font-weight:800;border:1px solid #000;padding:4px 8px;font-size:11.5pt;vertical-align:middle";
   var slip2Table =
-    '<table style="width:100%;border-collapse:collapse;font-size:9.5pt"><tr><td style="' +
+    '<table style="width:100%;border-collapse:collapse;font-size:11.5pt"><tr><td style="' +
     lbl2 +
     ';width:38%">खातेदाराचे नाव</td><td style="' +
     val2 +
@@ -2517,7 +2515,7 @@ function _goldLoanSlipsPage(
     val2 +
     '">रू. ' +
     lnAmt +
-    ' /- <span style="font-size:9pt;font-weight:600">( अक्षरी रू. ' +
+    ' /- <span style="font-size:11pt;font-weight:600">( अक्षरी रू. ' +
     lnWrd +
     " )</span></td></tr></table>";
   var slip2 =
@@ -2534,13 +2532,13 @@ function _goldLoanSlipsPage(
 
   // SLIP 3: GL-FORM-FEE-CR-CASH
   var slip3ScrollTbl =
-    '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:9pt;border-top:1px solid #000"><tr><th style="width:13%;border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">Scroll No</th><th style="width:20%;border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">कर्ज खाते क्र.</th><th style="width:20%;border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">खाते क्र.</th><th style="border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">तारीख</th><th style="width:12%;border:1px solid #000;padding:4px 7px;font-weight:800;text-align:left">Credit</th></tr><tr><td style="border:1px solid #000;padding:2px 5px">&nbsp;</td><td style="border:1px solid #000;padding:2px 5px;font-weight:800">' +
+    '<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:11pt;border-top:1px solid #000"><tr><th style="width:13%;border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">Scroll No</th><th style="width:20%;border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">कर्ज खाते क्र.</th><th style="width:20%;border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">खाते क्र.</th><th style="border:1px solid #000;padding:2px 5px;font-weight:700;text-align:left">तारीख</th><th style="width:12%;border:1px solid #000;padding:4px 7px;font-weight:800;text-align:left">Credit</th></tr><tr><td style="border:1px solid #000;padding:2px 5px">&nbsp;</td><td style="border:1px solid #000;padding:2px 5px;font-weight:800">' +
     lnAcc +
     '</td><td style="border:1px solid #000;padding:2px 5px;font-weight:800">935 / 1</td><td style="border:1px solid #000;padding:2px 5px;font-weight:800">' +
     dtFmt +
     '</td><td style="border:1px solid #000;padding:2px 5px">&nbsp;</td></tr></table>';
   var slip3Table =
-    '<table style="width:100%;border-collapse:collapse;font-size:9.5pt;border-top:1px solid #ddd"><tr><td style="border:1px solid #000;padding:3px 8px;font-weight:700;width:30%;background:#f8f8f8">खातेदाराचे नाव</td><td style="border:1px solid #000;padding:3px 8px;font-weight:800;font-size:10pt" colspan="2">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:11.5pt;border-top:1px solid #ddd"><tr><td style="border:1px solid #000;padding:3px 8px;font-weight:700;width:30%;background:#f8f8f8">खातेदाराचे नाव</td><td style="border:1px solid #000;padding:3px 8px;font-weight:800;font-size:12pt" colspan="2">' +
     nm +
     '</td></tr><tr><td style="border:1px solid #000;padding:3px 8px;font-weight:700;background:#f8f8f8">स्टेशनरी फि</td><td style="border:1px solid #000;padding:3px 8px;font-weight:800">रू. 50 /-</td><td style="border:1px solid #000;padding:3px 8px;font-weight:700">( अक्षरी पन्नास फक्त )</td></tr></table>';
   // Notes denomination table on the left, same placement/style as slip 4
@@ -2574,18 +2572,18 @@ function _goldLoanSlipsPage(
   // blank for handwriting since this slip covers general cash withdrawal, not a fixed loan amount)
   function slip4Hdr() {
     return (
-      '<div style="padding:6px 10px 4px;border-bottom:1.5px solid #000;display:flex;align-items:flex-start;gap:10px">' +
+      '<div style="padding:5px 10px 3px;border-bottom:1.5px solid #000;display:flex;align-items:flex-start;gap:10px">' +
       '<div style="text-align:center;line-height:1;flex-shrink:0">' +
-      '<div style="font-size:20pt;font-weight:900;color:#000;font-family:Georgia,serif;letter-spacing:-0.5px">JJU</div>' +
-      '<div style="font-size:6pt;font-weight:600;color:#333;margin-top:1px;white-space:nowrap">नातं विश्वासाचं</div>' +
+      '<div style="font-size:23pt;font-weight:900;color:#000;font-family:Georgia,serif;letter-spacing:-0.5px">JJU</div>' +
+      '<div style="font-size:7.5pt;font-weight:600;color:#333;margin-top:1px;white-space:nowrap">नातं विश्वासाचं</div>' +
       "</div>" +
       '<div style="flex:1">' +
-      '<div style="font-family:\'Noto Serif Devanagari\',serif;font-size:11.5pt;font-weight:700;color:#000;line-height:1.35">जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसायटी</div>' +
-      '<div style="font-size:9pt;font-weight:700;color:#000;line-height:1.3">मर्यादित जळगांव (जा.) जि.बुलढाणा र.नं.१०६७, शाखा : (जळगांव जा.)</div>' +
+      '<div style="font-family:\'Noto Serif Devanagari\',serif;font-size:14pt;font-weight:700;color:#000;line-height:1.3">जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसायटी</div>' +
+      '<div style="font-size:11pt;font-weight:700;color:#000;line-height:1.25">मर्यादित जळगांव (जा.) जि.बुलढाणा र.नं.१०६७, शाखा : (जळगांव जा.)</div>' +
       "</div>" +
       "</div>" +
-      '<div style="text-align:center;padding:5px 8px 6px;border-bottom:1px solid #000">' +
-      '<span style="font-size:12.5pt;font-weight:900">पैसे काढण्याचा फॉर्म</span>' +
+      '<div style="text-align:center;padding:4px 8px 5px;border-bottom:1px solid #000">' +
+      '<span style="font-size:15pt;font-weight:900">पैसे काढण्याचा फॉर्म</span>' +
       "</div>"
     );
   }
@@ -2594,14 +2592,14 @@ function _goldLoanSlipsPage(
     // "ठेव बुक अ. नं." — this field is the savings account number, not a
     // deposit-passbook number; relabeled to match the term used everywhere
     // else in the app, e.g. scrollTbl()'s "बचत खाते क्र." column above)
-    '<div style="display:flex;padding:7px 10px 4px;gap:14px">' +
+    '<div style="display:flex;padding:6px 10px 3px;gap:14px">' +
     '<div style="flex:1;display:flex;align-items:baseline;gap:4px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">Scroll No.</span>' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">Scroll No.</span>' +
     '<span style="border-bottom:1px solid #000;flex:1;display:inline-block">&nbsp;</span>' +
     "</div>" +
     '<div style="flex:1;display:flex;align-items:baseline;gap:4px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">बचत खाते क्र.</span>' +
-    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:10.5pt;font-weight:800;display:inline-block">' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">बचत खाते क्र.</span>' +
+    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:12.5pt;font-weight:800;display:inline-block">' +
     savAcc +
     "</span>" +
     "</div>" +
@@ -2610,60 +2608,60 @@ function _goldLoanSlipsPage(
     // generic "खाते क्र." — this is the loan account number, so it now reads
     // "कर्ज खाते क्र." like every other slip on this page; kept directly
     // before the दिनांक line, same row, as it already was)
-    '<div style="display:flex;padding:4px 10px;gap:14px">' +
+    '<div style="display:flex;padding:3px 10px;gap:14px">' +
     '<div style="flex:1;display:flex;align-items:baseline;gap:4px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">कर्ज खाते क्र.</span>' +
-    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:10.5pt;font-weight:800;display:inline-block">' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">कर्ज खाते क्र.</span>' +
+    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:12.5pt;font-weight:800;display:inline-block">' +
     lnAcc +
     "</span>" +
     "</div>" +
     '<div style="flex:1;display:flex;align-items:baseline;gap:4px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">दिनांक</span>' +
-    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:10.5pt;font-weight:800;display:inline-block">' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">दिनांक</span>' +
+    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:12.5pt;font-weight:800;display:inline-block">' +
     dtFmt +
     "</span>" +
     "</div>" +
     "</div>" +
     // Row: श्री / श्रीमती [nm] यांस अगर घेऊन
-    '<div style="display:flex;align-items:baseline;gap:4px;padding:4px 10px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">श्री / श्रीमती</span>' +
-    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:10.5pt;font-weight:800;display:inline-block">' +
+    '<div style="display:flex;align-items:baseline;gap:4px;padding:3px 10px">' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">श्री / श्रीमती</span>' +
+    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:12.5pt;font-weight:800;display:inline-block">' +
     nm +
     "</span>" +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">यांस अगर घेऊन</span>' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">यांस अगर घेऊन</span>' +
     "</div>" +
     // Row: येणारास ___  |  [₹ box — enlarged for handwriting, left blank]
-    '<div style="display:flex;align-items:center;gap:10px;padding:5px 10px">' +
+    '<div style="display:flex;align-items:center;gap:10px;padding:4px 10px">' +
     '<div style="flex:1;display:flex;align-items:baseline;gap:4px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">येणारास</span>' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">येणारास</span>' +
     '<span style="border-bottom:1px solid #000;flex:1;display:inline-block">&nbsp;</span>' +
     "</div>" +
-    '<div style="border:1.5px solid #000;padding:8px 20px;display:flex;align-items:center;gap:5px;min-width:55mm">' +
-    '<span style="font-size:14pt;font-weight:900">₹</span>' +
+    '<div style="border:1.5px solid #000;padding:6px 18px;display:flex;align-items:center;gap:5px;min-width:55mm">' +
+    '<span style="font-size:16pt;font-weight:900">₹</span>' +
     '<span style="border-bottom:1px solid #000;flex:1;display:inline-block">&nbsp;</span>' +
     "</div>" +
     "</div>" +
     // Row: रक्कम रूपये (अक्षरी) ___ (blank, for handwriting) ... देण्याचे करावे.
-    '<div style="padding:4px 10px">' +
+    '<div style="padding:3px 10px">' +
     '<div style="display:flex;align-items:baseline;gap:4px;margin-bottom:3px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">रक्कम रूपये (अक्षरी)</span>' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">रक्कम रूपये (अक्षरी)</span>' +
     '<span style="border-bottom:1px solid #000;flex:1;display:inline-block">&nbsp;</span>' +
     "</div>" +
     '<div style="display:flex;align-items:baseline;gap:4px">' +
     '<span style="border-bottom:1px solid #000;flex:1;display:inline-block">&nbsp;</span>' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">देण्याचे करावे.</span>' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">देण्याचे करावे.</span>' +
     "</div>" +
     "</div>" +
     // Row: खातेदाराचे नांव [nm]  |  signature space / खातेदाराची सही
-    '<div style="display:flex;align-items:flex-end;justify-content:space-between;padding:7px 10px 9px;gap:14px">' +
+    '<div style="display:flex;align-items:flex-end;justify-content:space-between;padding:6px 10px 7px;gap:14px">' +
     '<div style="flex:1;display:flex;align-items:baseline;gap:4px">' +
-    '<span style="font-size:9.5pt;font-weight:700;white-space:nowrap">खातेदाराचे नांव</span>' +
-    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:10.5pt;font-weight:800;display:inline-block">' +
+    '<span style="font-size:11.5pt;font-weight:700;white-space:nowrap">खातेदाराचे नांव</span>' +
+    '<span style="border-bottom:1px solid #000;flex:1;padding:0 3px;font-size:12.5pt;font-weight:800;display:inline-block">' +
     nm +
     "</span>" +
     "</div>" +
     '<div style="text-align:center;min-width:45mm">' +
-    '<div style="border-top:1px solid #000;margin-top:34px;padding-top:3px;font-size:8pt;font-weight:700">खातेदाराची सही</div>' +
+    '<div style="border-top:1px solid #000;margin-top:28px;padding-top:3px;font-size:10pt;font-weight:700">खातेदाराची सही</div>' +
     "</div>" +
     "</div>";
   // Cash denomination table on the left of the slip, for the teller to tally
@@ -2685,16 +2683,20 @@ function _goldLoanSlipsPage(
     "</div>" +
     "</div>";
 
-  // Scale reduced from 0.9 to 0.80 after adding slip 3's left-side notes-
-  // denomination table (same _jjuDenomTable() style/placement as slip 4):
-  // measured via headless-Chrome render, this taller left-side table style
-  // pushed the 4 slips to ~295mm at the original 0.9 scale — over the ~277mm
-  // printable A4 height. 0.80 measured at ~263mm, restoring a real safety
-  // margin (checked against both short and unusually long test names); width
-  // compensated to 1/0.80 so the scaled box still spans the full printable
-  // content width.
+  // Font sizes across all 4 slips were bumped up twice now (+1-1.5pt, then
+  // +1pt more). Scale re-tuned at the actual width used (width:% affects
+  // pre-scale line-wrapping, so it has to be measured together with scale,
+  // not derived from a raw/scale=1 measurement at a different width) — 0.81
+  // measured ~272mm with a normal/long test name but hit ~281mm (over the
+  // ~277mm printable A4 height) under an extreme stress case (very long
+  // name + very long loan-amount-in-words + long account numbers all at
+  // once). Backed off to 0.78, which measured ~262mm normally and ~271mm
+  // under that same stress case — a real safety margin either way, so this
+  // can never spill onto a second page — while still landing well above
+  // the original 0.80 scale's effective font size; width compensated to
+  // 1/0.78 so the scaled box still spans the full printable content width.
   return (
-    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.80);transform-origin:top left;width:125%">' +
+    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.78);transform-origin:top left;width:128.21%">' +
     slip1 +
     '<div class="sdiv" style="margin:4px 0"></div>' +
     slip2 +
@@ -5884,6 +5886,92 @@ function mkCertificate() {
 //  SAVING WITHDRAWAL SLIP PAGE  (बचत खाते काढणे)
 //  Bank copy + Customer copy
 // ═══════════════════════════════════════════════════════
+// "तपासनीसाचे प्रमाणपत्र" (Gold/silver appraisal certificate) — a separate
+// stationery slip that accompanies a saving-withdrawal cash payout when
+// items are held as informal collateral. All fields (date, borrower name,
+// account no.) are left blank for hand-filling, matching the paper form
+// this mirrors — only the org name/branch header is fixed print.
+function _tapasaniSlip() {
+  var B = "1px solid #000";
+  var th =
+    "border:" +
+    B +
+    ";padding:3px 3px;font-weight:800;text-align:center;font-size:7.3pt;background:#f2f2f2;vertical-align:middle";
+  var td = "border:" + B + ";padding:6px 3px;font-size:8pt;text-align:center";
+
+  var headCols = [
+    "अ.क्र.",
+    "गहाण ठेवावयाच्या मालाचे वर्णन",
+    "निशाणी",
+    "शुद्धता",
+    "एकुण वजन",
+    "वजन अंदाजे",
+    "दर - रु./१०ग्रॅ",
+    "एकुण किमत",
+  ];
+  var headRow =
+    "<tr>" +
+    headCols
+      .map(function (c) {
+        return '<th style="' + th + '">' + c + "</th>";
+      })
+      .join("") +
+    "</tr>";
+
+  var bodyRows = "";
+  for (var i = 1; i <= 7; i++) {
+    bodyRows +=
+      "<tr>" +
+      '<td style="' + td + '">' + i + "</td>" +
+      '<td style="' + td + '">&nbsp;</td>' +
+      '<td style="' + td + '">&nbsp;</td>' +
+      '<td style="' + td + '">&nbsp;</td>' +
+      '<td style="' + td + '">&nbsp;</td>' +
+      '<td style="' + td + '">&nbsp;</td>' +
+      '<td style="' + td + '">&nbsp;</td>' +
+      '<td style="' + td + '">&nbsp;</td>' +
+      "</tr>";
+  }
+  bodyRows +=
+    '<tr style="background:#f7f7f7;font-weight:800">' +
+    '<td style="' + td + '" colspan="2">एकुण</td>' +
+    '<td style="' + td + '">&nbsp;</td>' +
+    '<td style="' + td + '">&nbsp;</td>' +
+    '<td style="' + td + '">&nbsp;</td>' +
+    '<td style="' + td + '">&nbsp;</td>' +
+    '<td style="' + td + '">&nbsp;</td>' +
+    '<td style="' + td + '">&nbsp;</td>' +
+    "</tr>";
+
+  return (
+    '<div class="sblock" style="padding:6px 10px">' +
+    '<div style="text-align:center;font-size:13pt;font-weight:800;margin-bottom:4px">तपासनीसाचे प्रमाणपत्र</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:9pt;font-weight:700">' +
+    "<span>मे. शाखाधिकारी साहेब</span>" +
+    '<span>दिनांक : &nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;/20&nbsp;&nbsp;</span>' +
+    "</div>" +
+    '<div style="font-size:8.5pt;font-weight:700;margin:2px 0 6px">व्यवस्थापक , जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसा. मर्या. जळगाव (जा.)जि.बुलढाणा र.नं.१०६७</div>' +
+    '<div style="display:flex;align-items:baseline;gap:4px;font-size:9pt;font-weight:700;margin-bottom:6px">' +
+    '<span style="white-space:nowrap">कर्जदाराचे नाव</span>' +
+    '<span style="border-bottom:1px solid #000;flex:2;padding:0 4px;font-weight:800">&nbsp;</span>' +
+    '<span style="white-space:nowrap;margin-left:10px">कर्ज खाते क्र.</span>' +
+    '<span style="border-bottom:1px solid #000;flex:1;padding:0 4px;font-weight:800">&nbsp;</span>' +
+    "</div>" +
+    '<div style="font-size:8.3pt;line-height:1.4;margin-bottom:4px">मी अर्जदाराचे सोने चांदीचे दागिने संस्थेच्या नियमास अनुसरून तपासले आहेत मी खालीलप्रमाणे प्रमाणपत्र देत आहे.</div>' +
+    '<div style="text-align:center;font-size:9.5pt;font-weight:800;margin:4px 0">*** मालाचा तपशिल ***</div>' +
+    '<table style="width:100%;border-collapse:collapse">' +
+    headRow +
+    bodyRows +
+    "</table>" +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:6px 4px 2px;font-size:7.8pt;font-weight:700;margin-top:6px">' +
+    '<div style="text-align:center"><div style="border-top:1px solid #000;margin-top:22px;padding-top:2px;min-width:44mm">व्यवस्थापक / प्राधिकृत अधिकारी</div></div>' +
+    '<div style="text-align:center"><div style="border-top:1px solid #000;margin-top:22px;padding-top:2px;min-width:38mm">सोनाराची सही</div></div>' +
+    '<div style="text-align:center"><div style="border-top:1px solid #000;margin-top:22px;padding-top:2px;min-width:38mm">कर्जदाराची सही</div></div>' +
+    "</div>" +
+    "</div>"
+  );
+}
+
 function savingWithdrawalSlipPage(
   nm,
   dtFmt,
@@ -5897,6 +5985,8 @@ function savingWithdrawalSlipPage(
   var amtStr = amtNum > 0 ? amtNum.toLocaleString("en-IN") : "";
   var wrdStr = wrd || "";
 
+  // savBal is the BEFORE balance (see the matching comment in
+  // savingDepositSlipPage) — before - amt = after, computed here.
   var beforeBalNum =
     savBal && savBal !== "—"
       ? parseFloat(String(savBal).replace(/,/g, "")) || 0
@@ -5908,16 +5998,29 @@ function savingWithdrawalSlipPage(
         ? beforeBalNum
         : null;
   var afterBalStr =
-    afterBalNum != null ? afterBalNum.toLocaleString("en-IN") : "";
+    afterBalNum != null
+      ? (afterBalNum < 0 ? "-" : "") +
+        Math.abs(afterBalNum).toLocaleString("en-IN")
+      : "";
+  // Amount-in-words for उर्वरित शिल्लक, handling a negative (overdrawn)
+  // balance — numberToWords() alone doesn't handle negative numbers.
+  var afterBalWords =
+    afterBalNum != null
+      ? afterBalNum < 0
+        ? "Minus " + numberToWords(Math.abs(afterBalNum))
+        : numberToWords(afterBalNum)
+      : "";
 
   // ── Compact BOM-style Marathi withdrawal slip ──────────────────────────────
   function mkSlip() {
     return (
       '<div style="border:2px solid #000;page-break-inside:avoid">' +
-      // Header: full society name continuous
-      '<div style="border-bottom:2px solid #000;padding:4px 8px">' +
+      // Header: full society name continuous + Debit badge in the slip's
+      // upper-right corner
+      '<div style="border-bottom:2px solid #000;padding:4px 8px;position:relative">' +
       '<span style="font-size:10.5pt;font-weight:900;color:#b80000">जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसायटी मर्यादित</span>' +
       '<span style="font-size:9.5pt;font-weight:900;color:#000"> जळगाव (जा.) जि.बुलढाणा र.नं.१०६७</span>' +
+      '<span style="position:absolute;top:3px;right:6px;font-size:8pt;font-weight:800;border:1.5px solid #000;padding:1px 7px;white-space:nowrap;background:#fff">Debit</span>' +
       "</div>" +
       // Slip title + date on same row
       '<div style="border-bottom:1.5px solid #000;padding:3px 8px;display:flex;justify-content:space-between;align-items:center">' +
@@ -5926,8 +6029,17 @@ function savingWithdrawalSlipPage(
       dtFmt +
       "</strong></span>" +
       "</div>" +
+      // ── Restructured body: notes-denomination table spans the full left
+      // column (matches the app's other cash slips — Gold Loan slip 3/4 —
+      // and drops ₹2000 automatically since _jjuDenomTable() already
+      // excludes it); everything else stacked in a right column.
+      '<div style="display:flex;align-items:stretch;gap:0">' +
+      '<div style="min-width:38mm;padding:6px 0 6px 8px;border-right:1.5px solid #000">' +
+      _jjuDenomTable("#dbeeff", amtStr ? "₹" + amtStr : "") +
+      "</div>" +
+      '<div style="flex:1;min-width:0;display:flex;flex-direction:column">' +
       // Pay lines
-      '<div style="padding:5px 8px 4px;border-bottom:1.5px solid #000">' +
+      '<div style="padding:5px 8px 4px;border-bottom:1px solid #999">' +
       '<div style="font-size:9pt;margin-bottom:4px;display:flex;align-items:baseline;gap:4px">' +
       '<span style="white-space:nowrap">कृपया, मला वा धारकाला रू.</span>' +
       '<span style="border-bottom:1px solid #000;flex:1;display:inline-block">&nbsp;' +
@@ -5941,92 +6053,52 @@ function savingWithdrawalSlipPage(
       "</span>" +
       "</div>" +
       "</div>" +
-      // Acc no one liner + Debit label top-right
-      '<div style="border-bottom:1.5px solid #000;padding:5px 8px;display:flex;align-items:center;gap:12px">' +
+      // Acc no row (Debit badge moved to the header's top-right corner above)
+      '<div style="border-bottom:1px solid #999;padding:5px 8px;display:flex;align-items:center;gap:12px">' +
       '<span style="font-size:8.5pt;font-weight:800;white-space:nowrap">बचत खाते क्र.</span>' +
       '<span style="font-size:10pt;font-weight:900;letter-spacing:0.5px">' +
       savAcc +
       "</span>" +
       '<span style="font-size:8.5pt;font-weight:800;margin-left:auto;white-space:nowrap">ला नावे टाकून रोख द्यावेत.</span>' +
-      '<span style="font-size:8pt;font-weight:800;border:1.5px solid #000;padding:1px 7px;white-space:nowrap;align-self:flex-start">Debit</span>' +
       "</div>" +
       // Name + Amount
-      '<div style="display:flex;align-items:stretch;border-bottom:1.5px solid #000">' +
-      '<div style="flex:1;padding:5px 8px;border-right:1.5px solid #000">' +
+      '<div style="display:flex;align-items:stretch;border-bottom:1px solid #999">' +
+      '<div style="flex:1;padding:5px 8px;border-right:1px solid #999">' +
       '<div style="font-size:7.5pt;color:#555;margin-bottom:1px">खातेदाराचे नाव</div>' +
       '<div style="font-size:10.5pt;font-weight:900">' +
       nm +
       "</div>" +
       "</div>" +
-      '<div style="min-width:36mm;display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 8px">' +
-      '<span style="font-size:16pt;font-weight:900;color:#1a1a6e">₹</span>' +
-      '<span style="font-size:10.5pt;font-weight:900">' +
+      '<div style="min-width:32mm;display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 8px">' +
+      '<span style="font-size:15pt;font-weight:900;color:#1a1a6e">₹</span>' +
+      '<span style="font-size:10pt;font-weight:900">' +
       (amtStr ? amtStr + " /-" : "") +
       "</span>" +
       "</div>" +
       "</div>" +
-      // Notes denomination breakdown — teller fills in count/amount by hand
-      // per note value at payout time; the "एकूण" column is pre-filled with
-      // the slip's total so it can be cross-checked against the sum.
-      (function () {
-        var DENOMS = [2000, 500, 200, 100, 50, 20, 10];
-        var headCells =
-          '<td style="border:1px solid #000;padding:1.5px 2px;font-size:6.5pt;font-weight:800;text-align:left;background:#f2f2f2">₹ /नग</td>' +
-          DENOMS.map(function (d) {
-            return (
-              '<td style="border:1px solid #000;padding:1.5px 2px;font-size:6.5pt;font-weight:800;text-align:center;background:#f2f2f2">' +
-              d +
-              "</td>"
-            );
-          }).join("") +
-          '<td style="border:1px solid #000;padding:1.5px 2px;font-size:6.3pt;font-weight:800;text-align:center;background:#f2f2f2">सुटे</td>' +
-          '<td style="border:1px solid #000;padding:1.5px 2px;font-size:6.5pt;font-weight:900;text-align:center;background:#f2f2f2">एकूण</td>';
-        var countCells =
-          '<td style="border:1px solid #000;padding:0 2px;font-size:6.5pt;font-weight:700">नग</td>' +
-          DENOMS.map(function () {
-            return '<td style="border:1px solid #000;padding:3px 2px;text-align:center;font-size:7.5pt">&nbsp;</td>';
-          }).join("") +
-          '<td style="border:1px solid #000;padding:3px 2px;text-align:center;font-size:7.5pt">&nbsp;</td>' +
-          '<td style="border:1px solid #000;padding:3px 2px;text-align:center;font-size:7.5pt">&nbsp;</td>';
-        var amtCells =
-          '<td style="border:1px solid #000;padding:0 2px;font-size:6.5pt;font-weight:700">रक्कम</td>' +
-          DENOMS.map(function () {
-            return '<td style="border:1px solid #000;padding:3px 2px;text-align:center;font-size:7.5pt">&nbsp;</td>';
-          }).join("") +
-          '<td style="border:1px solid #000;padding:3px 2px;text-align:center;font-size:7.5pt">&nbsp;</td>' +
-          '<td style="border:1px solid #000;padding:3px 2px;text-align:center;font-size:7.5pt;font-weight:900">' +
-          (amtStr ? "₹" + amtStr : "") +
-          "</td>";
-        return (
-          '<div style="padding:3px 8px 4px;border-bottom:1.5px solid #000">' +
-          '<div style="font-size:7pt;font-weight:800;margin-bottom:2px">नोट मोजणी (Notes Denomination)</div>' +
-          '<table style="width:100%;border-collapse:collapse">' +
-          "<tr>" +
-          headCells +
-          "</tr>" +
-          "<tr>" +
-          countCells +
-          "</tr>" +
-          "<tr>" +
-          amtCells +
-          "</tr>" +
-          "</table>" +
-          "</div>"
-        );
-      })() +
-      // Remaining balance (optional)
+      // Remaining balance + amount in words
       (afterBalStr
-        ? '<div style="font-size:8pt;padding:2px 8px;border-bottom:1px solid #ddd">उर्वरित शिल्लक : <strong>₹ ' +
+        ? '<div style="padding:5px 8px;border-bottom:1px solid #999">' +
+          '<div style="font-size:8.5pt;font-weight:800;margin-bottom:3px">उर्वरित शिल्लक : Rs. ' +
           afterBalStr +
-          " /-</strong></div>"
+          " /-</div>" +
+          '<div style="font-size:7.8pt;font-weight:700;line-height:1.35">( अक्षरी रु. - ' +
+          afterBalWords +
+          " फक्त )</div>" +
+          "</div>"
         : "") +
-      // Signature row
-      '<div style="display:flex;padding:8px 8px 6px">' +
-      '<div style="flex:1;border-right:1.5px solid #000;padding-right:8px">' +
-      '<div style="border-top:1px solid #000;margin-top:9mm;padding-top:2px;font-size:7.5pt;font-weight:700;text-align:center">खातेदाराची स्वाक्षरी</div>' +
+      // Signature row — खातेदाराची स्वाक्षरी moved to the right with the
+      // customer's name
+      '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:8px 8px 6px;margin-top:auto;gap:10px">' +
+      '<div style="flex:1">' +
+      '<div style="border-top:1px solid #000;margin-top:9mm;padding-top:2px;font-size:7.3pt;font-weight:700;text-align:center">पासकर्ता अधिकारी / निरीक्षक / कर्मचारी</div>' +
       "</div>" +
-      '<div style="flex:1;padding-left:8px">' +
-      '<div style="border-top:1px solid #000;margin-top:9mm;padding-top:2px;font-size:7.5pt;font-weight:700;text-align:center">पासकर्ता अधिकारी / निरीक्षक / कर्मचारी</div>' +
+      '<div style="flex:1;text-align:right">' +
+      '<div style="border-top:1px solid #000;margin-top:9mm;padding-top:2px;font-size:7.3pt;font-weight:700;text-align:right">खातेदाराची स्वाक्षरी - ' +
+      nm +
+      "</div>" +
+      "</div>" +
+      "</div>" +
       "</div>" +
       "</div>" +
       "</div>"
@@ -6034,8 +6106,10 @@ function savingWithdrawalSlipPage(
   }
 
   return (
-    '<div class="spage">' +
+    '<div class="spage" style="page-break-inside:avoid">' +
     mkSlip() +
+    '<div class="sdiv" style="margin:6px 0;border-top:1px dashed #999"></div>' +
+    _tapasaniSlip() +
     declLine() +
     "</div>" +
     '<div class="spage-blank"></div>'

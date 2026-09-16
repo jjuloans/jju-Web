@@ -5324,6 +5324,29 @@ async function pdfRec(id) {
   if (txArr.includes("Closing - Loan") && window._closingOriginalDate) {
     data.date = data.date || window._closingOriginalDate;
   }
+  // BUG FIX: records.data.saving_balance is kept in sync with the live
+  // saving_accounts table by the backend (see process-transaction's
+  // "saving balance synced to records.data" step) — so by the time we
+  // reprint here, it already holds the balance AFTER this deposit/withdrawal
+  // was applied. But savingDepositSlipPage()/savingWithdrawalSlipPage() both
+  // expect savBal to be the BEFORE balance and compute before±amount=after
+  // themselves (see their own comments). Left alone, reprinting double-counts
+  // the transaction — e.g. a withdrawal's "उर्वरित शिल्लक" came out as a
+  // large negative number instead of the real current balance. Reconstruct
+  // the before-balance here so that formula lands back on the correct value.
+  if (
+    (txArr.includes("Saving Withdrawal") || txArr.includes("Saving Deposit")) &&
+    data.saving_balance != null &&
+    data.saving_balance !== ""
+  ) {
+    const _swAmt = parseFloat(data.deposit_amount) || 0;
+    const _swStoredBal = parseFloat(data.saving_balance) || 0;
+    if (_swAmt > 0) {
+      data.saving_balance = txArr.includes("Saving Withdrawal")
+        ? _swStoredBal + _swAmt
+        : _swStoredBal - _swAmt;
+    }
+  }
   const pC = ctype;
   try {
     ctype = "regular";
