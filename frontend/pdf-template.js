@@ -2690,13 +2690,14 @@ function _goldLoanSlipsPage(
   // measured ~272mm with a normal/long test name but hit ~281mm (over the
   // ~277mm printable A4 height) under an extreme stress case (very long
   // name + very long loan-amount-in-words + long account numbers all at
-  // once). Backed off to 0.78, which measured ~262mm normally and ~271mm
-  // under that same stress case — a real safety margin either way, so this
-  // can never spill onto a second page — while still landing well above
-  // the original 0.80 scale's effective font size; width compensated to
-  // 1/0.78 so the scaled box still spans the full printable content width.
+  // once). 0.78 was safe (~262mm normal / ~271mm stress) but left ~15mm of
+  // unused page space. Bumped back up to 0.80 — measured ~269mm normal and
+  // ~273mm under that same extreme stress case, still a real ~4mm safety
+  // margin under the 277mm budget (never spills to a second page), while
+  // filling noticeably more of the page than 0.78 did. width compensated to
+  // 1/0.80 so the scaled box still spans the full printable content width.
   return (
-    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.78);transform-origin:top left;width:128.21%">' +
+    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.80);transform-origin:top left;width:125%">' +
     slip1 +
     '<div class="sdiv" style="margin:4px 0"></div>' +
     slip2 +
