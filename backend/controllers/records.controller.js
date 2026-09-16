@@ -1209,10 +1209,19 @@ async function create(req, res) {
       "New Sadasya",
       "New Naammatr Sabhasad",
     ]);
+    // BUG FIX (caught in testing, before this ever reached production): a
+    // "Saving Acc Transfer" record has no natural account-opening tie, same
+    // as Deposit/Withdrawal — belongs in this set for the same reason. Without
+    // this, EVERY transfer record after the very first one would hit the
+    // idx_records_unique_saving_acc collision below and fail outright
+    // (confirmed against a real Postgres instance with that exact index: the
+    // first transfer insert succeeds, the second throws a duplicate-key
+    // error) — the feature would have broken after one use.
     const SAVING_TX_ONLY = new Set([
       "Saving Deposit",
       "Saving Withdrawal",
       "Closing - Saving Account",
+      "Saving Acc Transfer",
     ]);
     const isDepositOnlyRecord =
       section === "saving" &&

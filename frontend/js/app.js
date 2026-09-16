@@ -3459,7 +3459,14 @@ async function saveAndPDF() {
     return !window.confirm("⚠️ " + msg + "\n\nClick OK to save anyway, or Cancel to go back and fix it.");
   }
 
-  const noNameRequired = ["office", "bank"].includes(section);
+  // BUG FIX (caught in testing): "Saving Acc Transfer" has no single
+  // data.customer_name — it identifies two different members by their
+  // from/to account numbers instead (see the from/to fields below). Without
+  // this exemption every transfer save would trip the "Customer Name is
+  // required" warning, since that field is never collected on this form.
+  const noNameRequired =
+    ["office", "bank"].includes(section) ||
+    txArr.includes("Saving Acc Transfer");
   if (!data.customer_name && !noNameRequired) {
     if (_warnOrAbort("Customer Name is required")) { _abortSave(); return; }
   }
@@ -3993,6 +4000,15 @@ async function saveAndPDF() {
   // reference for these types, and — since account_no truly has no natural
   // value here — end with a synthetic-but-traceable placeholder so a save
   // can never hard-crash even if every one of those fields is left blank.
+  // BUG FIX (caught in testing): "Saving Acc Transfer" has no data.saving_acc_no
+  // (it uses from_saving_acc_no/to_saving_acc_no instead) — the fallback chain
+  // below would have resolved to "" for every transfer record. An empty
+  // account_no isn't a NOT-NULL violation by itself (the column defaults to
+  // ''), but idx_records_unique_saving_acc is a UNIQUE index on account_no
+  // for section='saving' rows — so the FIRST transfer would save fine and
+  // EVERY transfer after it would collide on that same empty string and fail
+  // outright. Use the debited (from) account as the primary reference instead,
+  // matching how every other section already picks one real account number.
   const primaryAccNo = isClosingRecord
     ? (data.loan_acc_no ? data.loan_acc_no + "-C" : data.account_no || "")
     : section === "gold" || section === "od"
@@ -4007,13 +4023,25 @@ async function saveAndPDF() {
             data.saving_acc_no ||
             data.account_no ||
             ("BANK-" + (txArr[0] || "TX").replace(/[^A-Za-z0-9]+/g, "-") + "-" + Date.now())
-          : data.saving_acc_no || data.account_no || "";
+          : txArr.includes("Saving Acc Transfer")
+            ? data.from_saving_acc_no || data.to_saving_acc_no || data.account_no || ""
+            : data.saving_acc_no || data.account_no || "";
+  // BUG FIX (caught in testing): the backend's create() rejects any non-bank
+  // record with an empty name ("Customer name is required", a hard 400 — see
+  // records.controller.js). A transfer has no single data.customer_name, so
+  // every transfer save would have failed at the API call, not just shown a
+  // bypassable warning. Compute a real display name from both accounts, same
+  // shape addCashbookRows() already uses for the ledger rows.
+  const _transferDisplayName =
+    txArr.includes("Saving Acc Transfer")
+      ? ((data.from_saving_acc_no || "") + " → " + (data.to_saving_acc_no || "")).trim() || "Saving Acc Transfer"
+      : null;
   const payload = {
     date:
       txArr.includes("Closing - Loan") && data.date
         ? data.date
         : data.date || new Date().toISOString().split("T")[0],
-    name: data.customer_name || (section === 'bank' ? '—' : data.customer_name),
+    name: data.customer_name || _transferDisplayName || (section === 'bank' ? '—' : data.customer_name),
     customer_id: data.customer_id || "",
     customer_type: ctype,
     aadhar: data.aadhar || "",
