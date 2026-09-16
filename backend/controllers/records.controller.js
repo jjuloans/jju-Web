@@ -2953,6 +2953,115 @@ async function processTransaction(req, res) {
       }
     }
 
+    // Saving Acc Transfer — debits one member's saving account and credits a
+    // DIFFERENT member's saving account, atomically (BEGIN/COMMIT/ROLLBACK —
+    // unlike the single-account Saving Deposit/Withdrawal block above, this
+    // touches two different saving_accounts rows and must not leave one leg
+    // applied without the other). Modeled on softDelete()'s client-transaction
+    // pattern elsewhere in this file; kept inside its own try/catch (rather
+    // than aborting the whole processTransaction request) so a failure here
+    // still lets the rest of this record's side effects run and be reported
+    // via errors[].
+    if (
+      txArr.includes("Saving Acc Transfer") &&
+      isValidSavingAccNo(data.from_saving_acc_no) &&
+      isValidSavingAccNo(data.to_saving_acc_no) &&
+      data.from_saving_acc_no.trim() !== data.to_saving_acc_no.trim()
+    ) {
+      const trAmt = parseFloat(data.transfer_amount) || 0;
+      if (trAmt > 0) {
+        const trClient = await pool.connect();
+        try {
+          await trClient.query("BEGIN");
+          // Guarded debit — same overdraft-race-condition protection as the
+          // single-account Saving Withdrawal path above.
+          const { rows: debitRows } = await trClient.query(
+            `UPDATE saving_accounts SET balance = balance - $1, updated_at=NOW()
+             WHERE saving_acc_no=$2 AND balance - $1 >= 0
+             RETURNING balance`,
+            [trAmt, data.from_saving_acc_no],
+          );
+          if (!debitRows.length) {
+            await trClient.query("ROLLBACK");
+            const { rows: balChk } = await pool.query(
+              `SELECT balance FROM saving_accounts WHERE saving_acc_no=$1 LIMIT 1`,
+              [data.from_saving_acc_no],
+            );
+            const curBal = balChk.length ? balChk[0].balance : 0;
+            errors.push(
+              `Saving Acc Transfer of ${trAmt} exceeds current balance of ${curBal} for acc ${data.from_saving_acc_no}`,
+            );
+          } else {
+            const { rows: creditRows } = await trClient.query(
+              `UPDATE saving_accounts SET balance = balance + $1, updated_at=NOW()
+               WHERE saving_acc_no=$2
+               RETURNING balance`,
+              [trAmt, data.to_saving_acc_no],
+            );
+            if (!creditRows.length) {
+              // "To" account doesn't exist in saving_accounts — roll back the
+              // debit too so we never leave money debited with nowhere credited.
+              await trClient.query("ROLLBACK");
+              errors.push(
+                `Saving Acc Transfer: destination account ${data.to_saving_acc_no} not found in saving_accounts`,
+              );
+            } else {
+              await trClient.query("COMMIT");
+              const newFromBal = debitRows[0].balance;
+              const newToBal = creditRows[0].balance;
+              results.push(
+                `saving acc transfer: ${data.from_saving_acc_no} -${trAmt} / ${data.to_saving_acc_no} +${trAmt}`,
+              );
+
+              // Sync both accounts' resulting balances back into records.data
+              // (from_saving_balance/to_saving_balance) and customers.saving_balance,
+              // same as the single-account Saving Deposit/Withdrawal sync above —
+              // so reprints and the customer list never show a stale balance.
+              // Looked up by saving_acc_no only (not OR customer_id like the
+              // single-account block) since this record_id belongs to the
+              // transfer itself, not to either leg's own customer record.
+              if (record_id) {
+                await pool
+                  .query(
+                    `UPDATE records SET data = data || jsonb_build_object(
+                       'from_saving_balance', $1::numeric,
+                       'to_saving_balance', $2::numeric
+                     ), updated_at = NOW()
+                     WHERE id = $3 AND is_deleted = FALSE`,
+                    [newFromBal, newToBal, record_id],
+                  )
+                  .catch(() => {});
+              }
+              await pool
+                .query(
+                  `UPDATE customers SET saving_balance = $1, updated_at = NOW()
+                   WHERE saving_acc_no = $2`,
+                  [newFromBal, data.from_saving_acc_no],
+                )
+                .catch(() => {});
+              await pool
+                .query(
+                  `UPDATE customers SET saving_balance = $1, updated_at = NOW()
+                   WHERE saving_acc_no = $2`,
+                  [newToBal, data.to_saving_acc_no],
+                )
+                .catch(() => {});
+              results.push(
+                "saving acc transfer balances synced to records.data and customers",
+              );
+            }
+          }
+        } catch (e) {
+          await trClient.query("ROLLBACK").catch(() => {});
+          errors.push("saving acc transfer: " + e.message);
+        } finally {
+          trClient.release();
+        }
+      } else {
+        errors.push("Saving Acc Transfer: transfer_amount must be greater than 0");
+      }
+    }
+
     // Saving close
     if (txArr.includes("Closing - Saving Account")) {
       try {

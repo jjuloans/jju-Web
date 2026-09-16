@@ -68,6 +68,7 @@ const GROUPS = [
       "Saving Account",
       "Saving Deposit",
       "Saving Withdrawal",
+      "Saving Acc Transfer",
       "Closing - Saving Account",
     ],
   },
@@ -241,6 +242,69 @@ const SECTIONS = [
       {
         id: "deposit_amount_words",
         label: "Amount in Words (अक्षरी)",
+        type: "text",
+        w: 1,
+      },
+    ],
+  },
+  {
+    // Saving Acc Transfer — debits one member's saving account and credits a
+    // DIFFERENT member's saving account in one atomic step. The customer-name
+    // for each account is shown via a live-lookup hint next to its account
+    // field (see onSavingAccNoInput's from/to variant in app.js) rather than
+    // as a separate form field, since this app's field renderer doesn't
+    // actually enforce `readonly` on input fields (only fd_maturity_date
+    // declares it, and it's dead — never read anywhere in app.js). The
+    // balance fields ARE real (editable) fields, same pattern as the
+    // existing single "Saving Balance (₹)" field on the Deposit/Withdrawal
+    // forms — auto-filled by the lookup, and collect() only picks up fields
+    // declared here, so both must exist as real fields to reach the backend.
+    sec: "🔁 Saving Acc Transfer",
+    fields: [
+      {
+        id: "from_saving_acc_no",
+        label: "From Saving Acc No. (43-)",
+        type: "text",
+        w: 1,
+        prefill: "43-",
+        req: true,
+      },
+      {
+        id: "from_saving_balance",
+        label: "From Acc Balance (₹)",
+        type: "number",
+        w: 1,
+      },
+      {
+        id: "to_saving_acc_no",
+        label: "To Saving Acc No. (43-)",
+        type: "text",
+        w: 1,
+        prefill: "43-",
+        req: true,
+      },
+      {
+        id: "to_saving_balance",
+        label: "To Acc Balance (₹)",
+        type: "number",
+        w: 1,
+      },
+      {
+        id: "transfer_amount",
+        label: "Transfer Amount (₹)",
+        type: "number",
+        w: 1,
+        req: true,
+      },
+      {
+        id: "transfer_amount_words",
+        label: "Amount in Words (अक्षरी)",
+        type: "text",
+        w: 1,
+      },
+      {
+        id: "transfer_ref_no",
+        label: "Reference / Scroll No.",
         type: "text",
         w: 1,
       },
@@ -1631,6 +1695,29 @@ const CB_TX_ROWS_MAP = {
       accFallback: "43",
       amountField: "deposit_amount",
       mode: "Cash",
+    },
+  ],
+  // Debits one member's saving account and credits a DIFFERENT member's
+  // saving account — two rows referencing two different form fields, same
+  // shape as RTGS's from/to bank-account pair below. scroll_no for both
+  // rows is overridden in app.js's addCashbookRows() to carry the manually
+  // entered transfer_ref_no (every other tx type here gets scroll_no "").
+  "Saving Acc Transfer": [
+    {
+      task: "Saving Acc Transfer",
+      acc_type: "Saving Account",
+      tx_type: "Debit",
+      acc_no: "from_saving_acc_no",
+      amountField: "transfer_amount",
+      mode: "Transfer",
+    },
+    {
+      task: "Saving Acc Transfer",
+      acc_type: "Saving Account",
+      tx_type: "Credit",
+      acc_no: "to_saving_acc_no",
+      amountField: "transfer_amount",
+      mode: "Transfer",
     },
   ],
   "Saving - Deposit Slip": [

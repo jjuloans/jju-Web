@@ -481,6 +481,20 @@ const TF = {
     "deposit_amount_words",
     "comments",
   ],
+  // No single "customer_name"/"customer_id" here — a transfer involves two
+  // different members, identified by their own account-number lookups
+  // instead (see onSavingAccNoInput's from/to variant).
+  "Saving Acc Transfer": [
+    "date",
+    "from_saving_acc_no",
+    "from_saving_balance",
+    "to_saving_acc_no",
+    "to_saving_balance",
+    "transfer_amount",
+    "transfer_amount_words",
+    "transfer_ref_no",
+    "comments",
+  ],
   "Saving - Deposit Slip": [
     "customer_name",
     "customer_id",
@@ -2228,6 +2242,10 @@ function buildForm() {
                   ? ` oninput="onSavingAccNoInput(this.value)" autocomplete="off"`
                   : f.id === "share_acc_no"
                   ? ` oninput="onShareAccNoInput(this.value)" autocomplete="off"`
+                  : f.id === "from_saving_acc_no"
+                  ? ` oninput="onTransferAccNoInput(this.value,'from')" autocomplete="off"`
+                  : f.id === "to_saving_acc_no"
+                  ? ` oninput="onTransferAccNoInput(this.value,'to')" autocomplete="off"`
                   : "";
         html +=
           '<div class="field ' +
@@ -2261,6 +2279,12 @@ function buildForm() {
             : "") +
           (f.id === "share_acc_no"
             ? '<div id="share-acc-hint" style="grid-column:1/-1;margin:-10px 0 4px;padding:0 2px;font-size:10px"></div>'
+            : "") +
+          (f.id === "from_saving_acc_no"
+            ? '<div id="from-saving-acc-hint" style="grid-column:1/-1;margin:-10px 0 4px;padding:0 2px;font-size:10px"></div>'
+            : "") +
+          (f.id === "to_saving_acc_no"
+            ? '<div id="to-saving-acc-hint" style="grid-column:1/-1;margin:-10px 0 4px;padding:0 2px;font-size:10px"></div>'
             : "");
       }
     });
@@ -3048,6 +3072,96 @@ async function onSavingAccNoInput(val) {
   }, 600);
 }
 
+// ── Saving Acc Transfer: from/to acc no live check — parameterized version
+// of onSavingAccNoInput() above, for the two independent account fields on
+// the transfer form. `side` is "from" or "to". Unlike onSavingAccNoInput,
+// there's no "new account duplicate check" branch — both accounts in a
+// transfer are assumed to already exist. Also, unlike the regular
+// Deposit/Withdrawal form (which has one customer_name field to send along
+// for fuzzy-match suggestions), a transfer form has no single customer, so
+// the lookup here is by account number only.
+let _transferAccTimer = { from: null, to: null };
+async function onTransferAccNoInput(val, side) {
+  if (side !== "from" && side !== "to") return;
+  clearTimeout(_transferAccTimer[side]);
+  const hint = document.getElementById(side + "-saving-acc-hint");
+  if (!hint) return;
+  hint.innerHTML = "";
+  const v = (val || "").trim();
+  if (!v || v.length < 5) return;
+
+  _transferAccTimer[side] = setTimeout(async () => {
+    function applyBalance(accNo, bal, customerName, status) {
+      const balEl = document.getElementById("f-" + side + "_saving_balance");
+      const accEl = document.getElementById("f-" + side + "_saving_acc_no");
+      if (balEl) balEl.value = bal;
+      if (accEl && accNo) accEl.value = accNo;
+      const isClosed = status === "closed";
+      const sp = document.createElement("span");
+      sp.style.cssText = isClosed
+        ? "color:#c0392b;font-weight:700;font-size:11px"
+        : "color:#27ae60;font-weight:700;font-size:11px";
+      sp.textContent =
+        (isClosed ? "⚠️ Account CLOSED — " : "✅ Balance: ₹") +
+        (isClosed ? customerName : Number(bal).toLocaleString("en-IN")) +
+        (isClosed ? "" : " — " + (customerName || ""));
+      hint.innerHTML = "";
+      hint.appendChild(sp);
+    }
+
+    function showSuggestions(suggestions) {
+      hint.innerHTML = "";
+      const warn = document.createElement("span");
+      warn.style.cssText = "color:#e67e22;font-weight:700;font-size:11px";
+      warn.textContent = "⚠️ Account number not found. Did you mean:";
+      hint.appendChild(warn);
+      suggestions.forEach((s) => {
+        const row = document.createElement("div");
+        row.style.cssText =
+          "display:flex;align-items:center;gap:6px;margin-top:3px";
+        const info = document.createElement("span");
+        info.style.cssText = "font-size:10px;color:#555";
+        info.textContent =
+          s.saving_acc_no +
+          " — " +
+          s.customer_name +
+          " — ₹" +
+          Number(s.balance).toLocaleString("en-IN");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.style.cssText =
+          "font-size:10px;background:#1a5276;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer";
+        btn.textContent = "Use this";
+        btn.addEventListener("click", () => {
+          applyBalance(s.saving_acc_no, s.balance, s.customer_name, s.status);
+        });
+        row.appendChild(info);
+        row.appendChild(btn);
+        hint.appendChild(row);
+      });
+    }
+
+    function setNotFound() {
+      hint.innerHTML =
+        '<span style="color:#e67e22;font-weight:700;font-size:11px">⚠️ Account not found</span>';
+    }
+
+    try {
+      const url = API + "/saving-balance/" + encodeURIComponent(v);
+      const result = await fetch(url).then((r) => r.json());
+      if (result.found) {
+        applyBalance(null, result.balance, result.customer_name, result.status);
+      } else if (result.suggestions && result.suggestions.length) {
+        showSuggestions(result.suggestions);
+      } else {
+        setNotFound();
+      }
+    } catch (e) {
+      setNotFound();
+    }
+  }, 600);
+}
+
 // Calculate FD maturity amount AND maturity date from principal, period (months), rate (%)
 // Uses simple interest: maturity = P + P*R*T/100  where T = period/12 years
 // Maturity date = transaction date + period months
@@ -3415,13 +3529,17 @@ async function saveAndPDF() {
       if (_warnOrAbort("FD Amount is required", "f-fd_amount")) { _abortSave(); return; }
     }
   }
+  const _isSavingAccTransfer = txArr.includes("Saving Acc Transfer");
   const _needsSavingAcc =
     section === "saving" ||
     txArr.includes("Saving Account") ||
     txArr.includes("New Sadasya") ||
     txArr.includes("New Naammatr Sabhasad");
   if (_needsSavingAcc) {
-    if (!data.saving_acc_no) {
+    // Saving Acc Transfer uses its own from_saving_acc_no/to_saving_acc_no
+    // fields instead of the single saving_acc_no field every other saving
+    // tx type uses — skip this check for it (validated separately below).
+    if (!data.saving_acc_no && !_isSavingAccTransfer) {
       if (_warnOrAbort("Saving Acc No is required", "f-saving_acc_no")) { _abortSave(); return; }
     }
     const isDepWd = txArr.some((t) =>
@@ -3460,6 +3578,46 @@ async function saveAndPDF() {
           _abortSave();
           return;
         }
+      }
+    }
+  }
+  if (_isSavingAccTransfer) {
+    if (!data.from_saving_acc_no) {
+      if (_warnOrAbort("From Saving Acc No is required", "f-from_saving_acc_no")) { _abortSave(); return; }
+    }
+    if (!data.to_saving_acc_no) {
+      if (_warnOrAbort("To Saving Acc No is required", "f-to_saving_acc_no")) { _abortSave(); return; }
+    }
+    if (
+      data.from_saving_acc_no &&
+      data.to_saving_acc_no &&
+      data.from_saving_acc_no.trim() === data.to_saving_acc_no.trim()
+    ) {
+      if (_warnOrAbort("From and To Saving Acc No cannot be the same account", "f-to_saving_acc_no")) { _abortSave(); return; }
+    }
+    const _trAmt = parseFloat(data.transfer_amount) || 0;
+    if (_trAmt <= 0) {
+      if (_warnOrAbort("Transfer Amount is required", "f-transfer_amount")) { _abortSave(); return; }
+    }
+    // Warn (bypassable) if the transfer exceeds the from-account's known
+    // balance — mirrors the Saving Withdrawal over-balance warning above.
+    const _trFromBal =
+      data.from_saving_balance != null && data.from_saving_balance !== ""
+        ? parseFloat(data.from_saving_balance)
+        : null;
+    if (_trFromBal != null && !isNaN(_trFromBal) && _trAmt > _trFromBal) {
+      if (
+        _warnOrAbort(
+          "Transfer amount ₹" +
+            _trAmt.toLocaleString("en-IN") +
+            " exceeds available balance ₹" +
+            _trFromBal.toLocaleString("en-IN") +
+            " on the From account",
+          "f-transfer_amount",
+        )
+      ) {
+        _abortSave();
+        return;
       }
     }
   }
@@ -3805,7 +3963,10 @@ async function saveAndPDF() {
   // For saving deposit/withdrawal, defer PDF generation until after
   // processTransaction so we use the live DB balance, not the stale form value.
   const _isSavingTx = txArr.includes('Saving Deposit') || txArr.includes('Saving Withdrawal');
-  if (!_isSavingTx) {
+  // Saving Acc Transfer also needs to wait — its voucher shows both accounts'
+  // post-transfer balances, which only exist once processTransaction has run.
+  // (_isSavingAccTransfer itself is declared earlier, in the validation block above.)
+  if (!_isSavingTx && !_isSavingAccTransfer) {
     try { generateTemplatePDF(pdfTxArr, data); } catch(e) { console.warn('PDF generation error:', e.message); }
   }
 
@@ -4110,6 +4271,41 @@ async function saveAndPDF() {
         data.saving_balance = ptJ.balance;
         console.log('[pdf] using live saving_balance from processTransaction:', ptJ.balance);
       }
+      // For Saving Acc Transfer, build data._transferRows for the transfer
+      // voucher PDF now that the backend has applied the debit/credit — fetch
+      // each account's live post-transfer balance and customer name (the
+      // ptJ.balance/ptJ.saving_acc_no fields above are single-account only
+      // and don't cover a transfer's two separate accounts).
+      if (_isSavingAccTransfer && data.from_saving_acc_no && data.to_saving_acc_no) {
+        try {
+          const [fromRes, toRes] = await Promise.all([
+            fetch(API + "/saving-balance/" + encodeURIComponent(data.from_saving_acc_no)).then(r => r.json()).catch(() => null),
+            fetch(API + "/saving-balance/" + encodeURIComponent(data.to_saving_acc_no)).then(r => r.json()).catch(() => null),
+          ]);
+          const trAmt = parseFloat(data.transfer_amount) || 0;
+          data._transferRows = [
+            {
+              tx_type: "Debit",
+              name: (fromRes && fromRes.customer_name) || "",
+              acc_no: data.from_saving_acc_no,
+              amount: trAmt,
+              scroll_no: data.transfer_ref_no || "",
+              balance_after: fromRes && fromRes.balance != null ? fromRes.balance : "",
+            },
+            {
+              tx_type: "Credit",
+              name: (toRes && toRes.customer_name) || "",
+              acc_no: data.to_saving_acc_no,
+              amount: trAmt,
+              scroll_no: data.transfer_ref_no || "",
+              balance_after: toRes && toRes.balance != null ? toRes.balance : "",
+            },
+          ];
+        } catch (e) {
+          console.warn("[pdf] failed to fetch post-transfer balances:", e.message);
+          data._transferRows = [];
+        }
+      }
     }
   } catch (e) {
     const isTimeout = e.name === "AbortError";
@@ -4120,9 +4316,9 @@ async function saveAndPDF() {
         : "⚠️ Account update failed: " + e.message + " — record was saved.", "warn");
     }
   }
-  // Generate the deferred PDF for saving deposit/withdrawal now that
-  // data.saving_balance has been updated with the live DB balance.
-  if (_isSavingTx) {
+  // Generate the deferred PDF for saving deposit/withdrawal (and Saving Acc
+  // Transfer) now that the live post-transaction balance(s) are available.
+  if (_isSavingTx || _isSavingAccTransfer) {
     try { generateTemplatePDF(pdfTxArr, data); } catch(e) { console.warn('PDF generation error:', e.message); }
   }
   // Auto-add cashbook entries for this transaction, right here at submit
@@ -4467,6 +4663,7 @@ const SECT_TX_TYPES = {
     "Saving Withdrawal",
     "Saving - Deposit Slip",
     "Saving - Withdrawal Slip",
+    "Saving Acc Transfer",
     "Closing - Saving Account",
   ],
   membership: [
@@ -5803,7 +6000,9 @@ async function addCashbookRows(recordId, data, txArr) {
       ? ((data.rtgs_from_acc || "") + " → " + (data.rtgs_to_acc || "")).trim() || "RTGS"
       : isInternalBank
         ? (data.bank_acc_name || txArr[0] || "Bank TRF")
-        : (data.customer_name || "");
+        : txArr.includes("Saving Acc Transfer")
+          ? ((data.from_saving_acc_no || "") + " → " + (data.to_saving_acc_no || "")).trim() || "Saving Acc Transfer"
+          : (data.customer_name || "");
     const entries = [];
     let sortOrder = 0;
 
@@ -5945,7 +6144,7 @@ async function addCashbookRows(recordId, data, txArr) {
           })(),
           amount,
           mode: row.mode,
-          scroll_no: "",
+          scroll_no: txArr.includes("Saving Acc Transfer") ? (data.transfer_ref_no || "") : "",
           loan_date: "",
           sort_order: sortOrder++,
         });
@@ -7473,6 +7672,11 @@ function renderLedgerMain() {
         bg: "#fff8e1",
         border: "#b7791f",
         text: "#7a5200",
+      },
+      "Saving Acc Transfer": {
+        bg: "#e8f8f0",
+        border: "#1e8449",
+        text: "#145a32",
       },
       "New Sadasya": {
         bg: "#e8f4fd",

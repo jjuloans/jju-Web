@@ -875,6 +875,92 @@ function bankTRFVoucherPage(bankRows, dtFmt, extraHtml) {
   );
 }
 
+// Saving Acc Transfer voucher — one member's saving account debited, a
+// different member's saving account credited, in a single transfer. Modeled
+// on bankTRFVoucherPage() above, but shows both legs together in one voucher
+// block (a transfer is one transaction, not a batch of independent rows the
+// way Bank TRF vouchers are — so there's no per-row loop here).
+function savingAccTransferVoucherPage(rows, dtFmt) {
+  rows = rows || [];
+  if (!rows.length) {
+    return '<div class="page"><p style="text-align:center;padding:20mm;color:#aaa">No Saving Acc Transfer entries found</p></div>';
+  }
+
+  var hdr =
+    "** जळगाव जामोद अर्बन को-ऑपरेटीव्ह क्रेडीट सोसा. मर्या. जळगाव जामोद र.नं. १०६७ **";
+
+  function fmtRs(n) {
+    return (
+      "₹" +
+      Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })
+    );
+  }
+
+  var debitRow =
+    rows.filter(function (r) {
+      return (r.tx_type || "").trim() === "Debit";
+    })[0] || {};
+  var creditRow =
+    rows.filter(function (r) {
+      return (r.tx_type || "").trim() === "Credit";
+    })[0] || {};
+
+  var amount = parseFloat(debitRow.amount || creditRow.amount) || 0;
+  var scrollNo = debitRow.scroll_no || creditRow.scroll_no || "";
+
+  function acctCell(label, r) {
+    return (
+      '<td style="border:1px solid #000;padding:6px 8px;vertical-align:top;width:50%">' +
+      '<div style="font-size:7.8pt;color:#555;margin-bottom:2px">' +
+      label +
+      "</div>" +
+      '<div style="font-weight:700">' +
+      (r.name || "") +
+      "</div>" +
+      "<div>Acc No: " +
+      (r.acc_no || "") +
+      "</div>" +
+      (r.balance_after != null && r.balance_after !== ""
+        ? "<div>Balance After: " + fmtRs(r.balance_after) + "</div>"
+        : "") +
+      "</td>"
+    );
+  }
+
+  return (
+    '<div class="page" style="padding:8mm 12mm;box-sizing:border-box">' +
+    '<div style="page-break-inside:avoid;border-top:1.5px dashed #666;padding-top:8px;margin-top:8px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px">' +
+    '<div style="font-weight:800;font-size:10pt">' +
+    hdr +
+    "</div>" +
+    '<div style="font-size:9pt;white-space:nowrap">Date - ' +
+    (dtFmt || "—") +
+    "</div>" +
+    "</div>" +
+    '<div style="font-size:9.5pt;margin:2px 0 6px">Saving Account Transfer Voucher' +
+    (scrollNo ? " (Ref/Scroll No: " + scrollNo + ")" : "") +
+    "</div>" +
+    '<table style="width:100%;border-collapse:collapse;font-size:9pt">' +
+    "<tr>" +
+    acctCell("FROM (Debit)", debitRow) +
+    acctCell("TO (Credit)", creditRow) +
+    "</tr>" +
+    "</table>" +
+    '<div style="font-size:9.5pt;margin:8px 0">Transfer Amount: <strong>' +
+    fmtRs(amount) +
+    "</strong> (" +
+    numberToWords(amount) +
+    ")</div>" +
+    '<div style="display:flex;justify-content:space-between;padding:14px 20px 4px">' +
+    '<div style="text-align:center"><div style="border-bottom:1px solid #000;height:14px;min-width:55mm;margin-bottom:3px"></div><div style="font-size:8.5pt">लेखापाल / खातेपाल</div></div>' +
+    '<div style="text-align:center"><div style="border-bottom:1px solid #000;height:14px;min-width:55mm;margin-bottom:3px"></div><div style="font-size:8.5pt">व्यवस्थापक / अधिकारी</div></div>' +
+    "</div>" +
+    "</div>" +
+    "</div>"
+  );
+}
+
 // Helper: number to words for voucher totals — rupees, plus paise when the
 // amount has a fractional part (e.g. 23.60 → "Twenty Three and Sixty
 // Paisa"). Previously this floored to whole rupees and silently dropped any
@@ -1073,6 +1159,8 @@ function buildHTMLPage(txType, data) {
 
   if (txType === "Bank TRF Voucher")
     return bankTRFVoucherPage(data._bankRows || [], dtFmt);
+  if (txType === "Saving Acc Transfer")
+    return savingAccTransferVoucherPage(data._transferRows || [], dtFmt);
 
   if (txType === "Gold Loan")
     return goldLoanPage(
