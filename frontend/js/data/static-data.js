@@ -262,7 +262,7 @@ const SECTIONS = [
     fields: [
       {
         id: "from_saving_acc_no",
-        label: "From Saving Acc No.",
+        label: "From Saving Acc No. (or search name/mobile)",
         type: "text",
         w: 1,
         req: true,
@@ -275,7 +275,7 @@ const SECTIONS = [
       },
       {
         id: "to_saving_acc_no",
-        label: "To Saving Acc No.",
+        label: "To Saving Acc No. (or search name/mobile)",
         type: "text",
         w: 1,
         req: true,

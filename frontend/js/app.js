@@ -3088,7 +3088,9 @@ async function onTransferAccNoInput(val, side) {
   if (!hint) return;
   hint.innerHTML = "";
   const v = (val || "").trim();
-  if (!v || v.length < 5) return;
+  // Lowered from 5: an exact account number is long, but a name/mobile
+  // search (e.g. "Ram") should start suggesting well before that.
+  if (!v || v.length < 2) return;
 
   _transferAccTimer[side] = setTimeout(async () => {
     function applyBalance(accNo, bal, customerName, status) {
@@ -3109,31 +3111,38 @@ async function onTransferAccNoInput(val, side) {
       hint.appendChild(sp);
     }
 
-    function showSuggestions(suggestions) {
+    // Renders search-by-name/mobile/acc-no matches from
+    // /api/combined/saving-accounts (rows shaped {acc_no, customer_name,
+    // mobile, balance, status}). Clicking a row fills both fields, same as
+    // typing the exact account number would.
+    function showSuggestions(rows, notFoundExact) {
       hint.innerHTML = "";
       const warn = document.createElement("span");
       warn.style.cssText = "color:#e67e22;font-weight:700;font-size:11px";
-      warn.textContent = "⚠️ Account number not found. Did you mean:";
+      warn.textContent = notFoundExact
+        ? "⚠️ Not an exact account number — matches for “" + v + "”:"
+        : "Matches for “" + v + "”:";
       hint.appendChild(warn);
-      suggestions.forEach((s) => {
+      rows.forEach((s) => {
         const row = document.createElement("div");
         row.style.cssText =
-          "display:flex;align-items:center;gap:6px;margin-top:3px";
+          "display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap";
         const info = document.createElement("span");
         info.style.cssText = "font-size:10px;color:#555";
         info.textContent =
-          s.saving_acc_no +
+          (s.customer_name || "(no name)") +
           " — " +
-          s.customer_name +
+          s.acc_no +
+          (s.mobile ? " — " + s.mobile : "") +
           " — ₹" +
-          Number(s.balance).toLocaleString("en-IN");
+          Number(s.balance || 0).toLocaleString("en-IN");
         const btn = document.createElement("button");
         btn.type = "button";
         btn.style.cssText =
           "font-size:10px;background:#1a5276;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer";
         btn.textContent = "Use this";
         btn.addEventListener("click", () => {
-          applyBalance(s.saving_acc_no, s.balance, s.customer_name, s.status);
+          applyBalance(s.acc_no, s.balance, s.customer_name, s.status);
         });
         row.appendChild(info);
         row.appendChild(btn);
@@ -3143,23 +3152,45 @@ async function onTransferAccNoInput(val, side) {
 
     function setNotFound() {
       hint.innerHTML =
-        '<span style="color:#e67e22;font-weight:700;font-size:11px">⚠️ Account not found</span>';
+        '<span style="color:#e67e22;font-weight:700;font-size:11px">⚠️ No account found for “' +
+        v.replace(/</g, "&lt;") +
+        '” — try the account number, customer name, or mobile number</span>';
     }
 
+    // 1) Try an exact account-number match first (fast path for staff who
+    //    already know the number — unchanged from before).
     try {
       const url = API + "/saving-balance/" + encodeURIComponent(v);
       const result = await fetch(url).then((r) => r.json());
       if (result.found) {
         applyBalance(null, result.balance, result.customer_name, result.status);
-      } else if (result.suggestions && result.suggestions.length) {
-        showSuggestions(result.suggestions);
+        return;
+      }
+    } catch (e) {
+      // fall through to the search below
+    }
+
+    // 2) No exact match — search by name / mobile / account no / cust
+    //    code / Aadhar via the same endpoint the admin dashboard's account
+    //    search uses. Only active accounts are offered here since a
+    //    transfer can't use a closed account as either side.
+    try {
+      // NOTE: API ("/api/records") is only for records.routes.js endpoints
+      // — the account search lives under combined.routes.js, mounted at
+      // "/api/combined", so this must use API_BASE, not API.
+      const searchUrl =
+        API_BASE + "/combined/saving-accounts?status=active&limit=8&search=" +
+        encodeURIComponent(v);
+      const rows = await fetch(searchUrl).then((r) => r.json());
+      if (Array.isArray(rows) && rows.length) {
+        showSuggestions(rows, true);
       } else {
         setNotFound();
       }
     } catch (e) {
       setNotFound();
     }
-  }, 600);
+  }, 500);
 }
 
 // Calculate FD maturity amount AND maturity date from principal, period (months), rate (%)
