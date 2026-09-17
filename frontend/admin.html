@@ -2402,8 +2402,8 @@ function loadCasesReport() {
           <button class="filter-tab" id="case-mode-monthly" onclick="setCaseReportMode('monthly')">Monthly</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="date" id="case-report-date" value="${new Date().toISOString().split('T')[0]}" onchange="loadCaseReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
-          <input type="month" id="case-report-month" value="${new Date().toISOString().slice(0,7)}" onchange="loadCaseReport()" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
+          <input type="date" id="case-report-date" value="${_todayLocalStr()}" onchange="loadCaseReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
+          <input type="month" id="case-report-month" value="${_thisMonthLocalStr()}" onchange="loadCaseReport()" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
           <button class="crud-btn crud-btn-cancel" onclick="printCasesSummary()" title="Print this report as PDF">🖨️ Print / PDF</button>
         </div>
       </div>
@@ -2413,6 +2413,20 @@ function loadCasesReport() {
 }
 
 // Account Cases Opened/Closed (Daily / Monthly)
+// BUG FIX: new Date().toISOString() is always UTC -- for IST (UTC+5:30) any
+// time between local midnight and 5:29am has UTC still on the PREVIOUS day,
+// so a plain toISOString() default silently pre-selects "yesterday" during
+// that window (reported live: report opened defaulting to 16 Sept instead
+// of the real local 17 Sept). These build the date string from the
+// browser's own local clock instead.
+function _todayLocalStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function _thisMonthLocalStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
 let caseReportMode = 'daily';
 const CASE_SECTION_LABELS = {
   gold: '🥇 Gold Loans', od: '🔄 OD Loans', fd: '📋 Fixed Deposits',
@@ -2437,18 +2451,18 @@ async function loadCaseReport() {
   try {
     let rows = [], periodLabel = '';
     if (caseReportMode === 'daily') {
-      const date = (document.getElementById('case-report-date')||{}).value || new Date().toISOString().split('T')[0];
+      const date = (document.getElementById('case-report-date')||{}).value || _todayLocalStr();
       const data = await apiFetch('/reports/daily-summary?date=' + date);
-      rows = (data.sections || []).map(r => ({ section: r.section, opened: parseInt(r.opened)||0, closed: parseInt(r.closed)||0 }));
+      rows = (data.sections || []).map(r => ({ section: r.section, opened: parseInt(r.opened)||0, closed: parseInt(r.closed)||0, openedAmt: parseFloat(r.opened_amount)||0, closedAmt: parseFloat(r.closed_amount)||0 }));
       periodLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
     } else {
-      const monthVal = (document.getElementById('case-report-month')||{}).value || new Date().toISOString().slice(0,7);
+      const monthVal = (document.getElementById('case-report-month')||{}).value || _thisMonthLocalStr();
       const [y, m] = monthVal.split('-');
       const data = await apiFetch(`/reports/monthly?year=${y}&month=${parseInt(m,10)}`);
-      rows = (data.by_section || []).map(r => ({ section: r.section, opened: parseInt(r.count)||0, closed: parseInt(r.closed)||0 }));
+      rows = (data.by_section || []).map(r => ({ section: r.section, opened: parseInt(r.count)||0, closed: parseInt(r.closed)||0, openedAmt: parseFloat(r.opened_amount)||0, closedAmt: parseFloat(r.closed_amount)||0 }));
       periodLabel = new Date(parseInt(y,10), parseInt(m,10)-1, 1).toLocaleDateString('en-IN', {month:'long', year:'numeric'});
     }
-    const caseRows = CASE_SECTIONS.map(sec => rows.find(r=>r.section===sec) || {section:sec, opened:0, closed:0});
+    const caseRows = CASE_SECTIONS.map(sec => rows.find(r=>r.section===sec) || {section:sec, opened:0, closed:0, openedAmt:0, closedAmt:0});
     const otherRows = rows.filter(r => !CASE_SECTIONS.includes(r.section) && (r.opened||r.closed));
     // Totals are always the sum of the known account-case sections only —
     // NOT the backend's raw totals, which (for /reports/monthly especially)
@@ -2457,24 +2471,28 @@ async function loadCaseReport() {
     // table actually shown below them.
     const opened = caseRows.reduce((s,r)=>s+r.opened, 0);
     const closed = caseRows.reduce((s,r)=>s+r.closed, 0);
+    const openedAmt = caseRows.reduce((s,r)=>s+r.openedAmt, 0);
+    const closedAmt = caseRows.reduce((s,r)=>s+r.closedAmt, 0);
     // Non-zero counts are clickable — drill down into the actual list of
-    // accounts behind that number via /reports/cases-detail.
-    const cell = (val, section, type) => val > 0
-      ? `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;" onclick="showCaseDetail('${section}','${type}')" title="Click to see the list">${val}</td>`
-      : `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};opacity:.45;">${val}</td>`;
-    const rowHtml = r => `<tr><td style="padding:6px 10px;">${CASE_SECTION_LABELS[r.section]||r.section}</td>${cell(r.opened,r.section,'opened')}${cell(r.closed,r.section,'closed')}</tr>`;
+    // accounts behind that number via /reports/cases-detail. The rupee
+    // figure next to each count is NOT clickable (it's just the sum of that
+    // same drill-down list -- click the count to see which accounts made it up).
+    const cell = (val, amt, section, type) => val > 0
+      ? `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;" onclick="showCaseDetail('${section}','${type}')" title="Click to see the list">${val}</td><td style="padding:6px 10px;text-align:right;color:${type==='opened'?'#1a7a45':'#c0302a'};">${fmt(amt)}</td>`
+      : `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};opacity:.45;">${val}</td><td style="padding:6px 10px;text-align:right;color:${type==='opened'?'#1a7a45':'#c0302a'};opacity:.45;">${fmt(amt)}</td>`;
+    const rowHtml = r => `<tr><td style="padding:6px 10px;">${CASE_SECTION_LABELS[r.section]||r.section}</td>${cell(r.opened,r.openedAmt,r.section,'opened')}${cell(r.closed,r.closedAmt,r.section,'closed')}</tr>`;
     // Keep the currently-rendered summary around so printCasesSummary() can
     // build the print view from it without re-fetching.
-    window._lastCaseSummary = { caseRows, otherRows, opened, closed, periodLabel };
+    window._lastCaseSummary = { caseRows, otherRows, opened, closed, openedAmt, closedAmt, periodLabel };
     body.innerHTML = `
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${periodLabel}</div>
-      <div style="display:flex;gap:24px;margin-bottom:14px;">
-        <div style="font-size:13px;">Total Opened: <strong style="color:#1a7a45;">${opened}</strong></div>
-        <div style="font-size:13px;">Total Closed: <strong style="color:#c0302a;">${closed}</strong></div>
+      <div style="display:flex;gap:24px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="font-size:13px;">Total Opened: <strong style="color:#1a7a45;">${opened}</strong> <span style="color:var(--muted);">(${fmt(openedAmt)})</span></div>
+        <div style="font-size:13px;">Total Closed: <strong style="color:#c0302a;">${closed}</strong> <span style="color:var(--muted);">(${fmt(closedAmt)})</span></div>
       </div>
       <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr style="color:var(--muted);text-align:left;"><th style="padding:6px 10px;border-bottom:1px solid var(--border);">Account Type</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;">Opened</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;">Closed</th></tr></thead>
+        <thead><tr style="color:var(--muted);text-align:left;"><th style="padding:6px 10px;border-bottom:1px solid var(--border);">Account Type</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;">Opened</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;">Opened Amt</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;">Closed</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;">Closed Amt</th></tr></thead>
         <tbody>${caseRows.map(rowHtml).join('')}</tbody>
       </table>
       </div>
@@ -2498,11 +2516,11 @@ async function showCaseDetail(section, type) {
     let url = `/reports/cases-detail?section=${encodeURIComponent(section)}&type=${type}`;
     let periodLabel;
     if (caseReportMode === 'daily') {
-      const date = (document.getElementById('case-report-date')||{}).value || new Date().toISOString().split('T')[0];
+      const date = (document.getElementById('case-report-date')||{}).value || _todayLocalStr();
       url += '&date=' + date;
       periodLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
     } else {
-      const monthVal = (document.getElementById('case-report-month')||{}).value || new Date().toISOString().slice(0,7);
+      const monthVal = (document.getElementById('case-report-month')||{}).value || _thisMonthLocalStr();
       const [y, m] = monthVal.split('-');
       url += `&year=${y}&month=${parseInt(m,10)}`;
       periodLabel = new Date(parseInt(y,10), parseInt(m,10)-1, 1).toLocaleDateString('en-IN', {month:'long', year:'numeric'});
@@ -2572,15 +2590,15 @@ function printCasesSummary() {
   const s = window._lastCaseSummary;
   if (!s) { alert('Load the report first.'); return; }
   const win = _openPrintWindow('Cases Report'); if (!win) return;
-  const rowHtml = r => `<tr><td>${CASE_SECTION_LABELS[r.section]||r.section}</td><td style="text-align:center;">${r.opened}</td><td style="text-align:center;">${r.closed}</td></tr>`;
+  const rowHtml = r => `<tr><td>${CASE_SECTION_LABELS[r.section]||r.section}</td><td style="text-align:center;">${r.opened}</td><td style="text-align:right;">${fmt(r.openedAmt)}</td><td style="text-align:center;">${r.closed}</td><td style="text-align:right;">${fmt(r.closedAmt)}</td></tr>`;
   win.document.write(`<!DOCTYPE html><html><head><title>Cases Report — ${s.periodLabel}</title>
   <style>${_caseReportPrintStyles()}</style></head><body>
   ${_printHeader('Account Cases Opened / Closed — ' + s.periodLabel)}
   <div class="totals">
-    <div>Total Opened: <strong style="color:#1a7a45;">${s.opened}</strong></div>
-    <div>Total Closed: <strong style="color:#c0302a;">${s.closed}</strong></div>
+    <div>Total Opened: <strong style="color:#1a7a45;">${s.opened}</strong> (${fmt(s.openedAmt)})</div>
+    <div>Total Closed: <strong style="color:#c0302a;">${s.closed}</strong> (${fmt(s.closedAmt)})</div>
   </div>
-  <table><thead><tr><th>Account Type</th><th style="text-align:center;">Opened</th><th style="text-align:center;">Closed</th></tr></thead>
+  <table><thead><tr><th>Account Type</th><th style="text-align:center;">Opened</th><th style="text-align:right;">Opened Amt</th><th style="text-align:center;">Closed</th><th style="text-align:right;">Closed Amt</th></tr></thead>
   <tbody>${s.caseRows.map(rowHtml).join('')}</tbody></table>
   ${s.otherRows.length ? `<div style="margin-top:10px;font-size:11px;color:#6b7280;">Other (non-account) entries in this period — office/bank transactions, not account cases: ${s.otherRows.map(r=>`${r.section} (${r.opened} opened / ${r.closed} closed)`).join(', ')}</div>` : ''}
   <div class="footer">This is a computer-generated report. | ${new Date().toLocaleString('en-IN')}</div>

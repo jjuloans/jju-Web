@@ -21,7 +21,16 @@ router.get('/daily-summary', async (req, res) => {
       pool.query(`
         SELECT section,
           COUNT(*) FILTER (WHERE date::text=$1)        AS opened,
-          COUNT(*) FILTER (WHERE closed_date::text=$1)  AS closed
+          COUNT(*) FILTER (WHERE closed_date::text=$1)  AS closed,
+          -- NEW: rupee figures alongside the counts (per-section amount
+          -- field varies -- loan_amount for gold/od, fd_amount for fd,
+          -- saving_balance for saving, etc.) so staff can see how much
+          -- money moved on a day, not just how many cases. FILTER means
+          -- Postgres skips evaluating this cast for rows that don't match,
+          -- so a section with no amount field (e.g. membership) never
+          -- risks a bad-data cast error on an unrelated day.
+          COALESCE(SUM(COALESCE((data->>'loan_amount')::numeric,(data->>'fd_amount')::numeric,(data->>'deposit_amount')::numeric,(data->>'transfer_amount')::numeric,(data->>'saving_balance')::numeric,(data->>'to_saving_balance')::numeric,(data->>'share_amount')::numeric,0)) FILTER (WHERE date::text=$1), 0)        AS opened_amount,
+          COALESCE(SUM(COALESCE((data->>'loan_amount')::numeric,(data->>'fd_amount')::numeric,(data->>'deposit_amount')::numeric,(data->>'transfer_amount')::numeric,(data->>'saving_balance')::numeric,(data->>'to_saving_balance')::numeric,(data->>'share_amount')::numeric,0)) FILTER (WHERE closed_date::text=$1), 0) AS closed_amount
         FROM records
         WHERE is_deleted=FALSE AND (date::text=$1 OR closed_date::text=$1)
           -- BUG FIX: "Closing - Loan"/"Closing - OD" submissions are saved as a
@@ -145,7 +154,11 @@ router.get('/monthly', async (req, res) => {
           COUNT(*) FILTER (WHERE date::text BETWEEN $1 AND $2)        AS count,
           COUNT(*) FILTER (WHERE closed_date::text BETWEEN $1 AND $2) AS closed,
           COALESCE(SUM((data->>'loan_amount')::numeric) FILTER (WHERE section IN ('gold','od') AND date::text BETWEEN $1 AND $2), 0) AS loan_total,
-          COALESCE(SUM((data->>'fd_amount')::numeric)   FILTER (WHERE section='fd' AND date::text BETWEEN $1 AND $2), 0) AS fd_total
+          COALESCE(SUM((data->>'fd_amount')::numeric)   FILTER (WHERE section='fd' AND date::text BETWEEN $1 AND $2), 0) AS fd_total,
+          -- NEW: same generalized opened/closed amount pair as /daily-summary
+          -- (see comment there), for the Cases Report's Monthly view.
+          COALESCE(SUM(COALESCE((data->>'loan_amount')::numeric,(data->>'fd_amount')::numeric,(data->>'deposit_amount')::numeric,(data->>'transfer_amount')::numeric,(data->>'saving_balance')::numeric,(data->>'to_saving_balance')::numeric,(data->>'share_amount')::numeric,0)) FILTER (WHERE date::text BETWEEN $1 AND $2), 0)        AS opened_amount,
+          COALESCE(SUM(COALESCE((data->>'loan_amount')::numeric,(data->>'fd_amount')::numeric,(data->>'deposit_amount')::numeric,(data->>'transfer_amount')::numeric,(data->>'saving_balance')::numeric,(data->>'to_saving_balance')::numeric,(data->>'share_amount')::numeric,0)) FILTER (WHERE closed_date::text BETWEEN $1 AND $2), 0) AS closed_amount
         FROM records
         WHERE is_deleted=FALSE AND (date::text BETWEEN $1 AND $2 OR closed_date::text BETWEEN $1 AND $2)
           -- Same closing-audit-row exclusion as /daily-summary (see comment there).
