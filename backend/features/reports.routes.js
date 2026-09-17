@@ -24,6 +24,15 @@ router.get('/daily-summary', async (req, res) => {
           COUNT(*) FILTER (WHERE closed_date::text=$1)  AS closed
         FROM records
         WHERE is_deleted=FALSE AND (date::text=$1 OR closed_date::text=$1)
+          -- BUG FIX: "Closing - Loan"/"Closing - OD" submissions are saved as a
+          -- SEPARATE new records row (account_no suffixed "-C") purely as an
+          -- audit/history log of the closing transaction -- see the comment at
+          -- app.js's primaryAccNo assignment ("append -C to make it unique").
+          -- That row's own 'date' is the closing date and its 'status' defaults
+          -- to 'active' (it's never itself opened/closed), so without this
+          -- exclusion it was double-counted as a brand-new "Opened" gold/od
+          -- case on the very same day the real loan shows up as "Closed".
+          AND NOT (section IN ('gold','od') AND account_no LIKE '%-C')
         GROUP BY section`, [date]),
 
       // BUG FIX: tx_type is stored as 'Credit'/'Debit' (see cbTxType() in
@@ -94,6 +103,10 @@ router.get('/cases-detail', async (req, res) => {
         ) AS amount
       FROM records
       WHERE is_deleted = FALSE AND section = $1 AND ${whereDate}
+        -- Same closing-audit-row exclusion as /daily-summary and /monthly --
+        -- these "-C" rows are a log entry of the closing transaction, not a
+        -- real account case, and must never appear in this drill-down list.
+        AND NOT (section IN ('gold','od') AND account_no LIKE '%-C')
       ORDER BY ${dateCol} DESC NULLS LAST, id DESC
       LIMIT 500
     `, params);
@@ -111,8 +124,8 @@ router.get('/monthly', async (req, res) => {
     const to    = new Date(year, month, 0).toISOString().split('T')[0]; // last day
 
     const [opened, closed, cashbook, bySection] = await Promise.all([
-      pool.query(`SELECT COUNT(*) FROM records WHERE is_deleted=FALSE AND date::text BETWEEN $1 AND $2`, [from, to]),
-      pool.query(`SELECT COUNT(*) FROM records WHERE is_deleted=FALSE AND closed_date::text BETWEEN $1 AND $2`, [from, to]),
+      pool.query(`SELECT COUNT(*) FROM records WHERE is_deleted=FALSE AND date::text BETWEEN $1 AND $2 AND NOT (section IN ('gold','od') AND account_no LIKE '%-C')`, [from, to]),
+      pool.query(`SELECT COUNT(*) FROM records WHERE is_deleted=FALSE AND closed_date::text BETWEEN $1 AND $2 AND NOT (section IN ('gold','od') AND account_no LIKE '%-C')`, [from, to]),
       // Same Cash-only + case fix as /daily-summary above.
       pool.query(`
         SELECT
@@ -135,6 +148,8 @@ router.get('/monthly', async (req, res) => {
           COALESCE(SUM((data->>'fd_amount')::numeric)   FILTER (WHERE section='fd' AND date::text BETWEEN $1 AND $2), 0) AS fd_total
         FROM records
         WHERE is_deleted=FALSE AND (date::text BETWEEN $1 AND $2 OR closed_date::text BETWEEN $1 AND $2)
+          -- Same closing-audit-row exclusion as /daily-summary (see comment there).
+          AND NOT (section IN ('gold','od') AND account_no LIKE '%-C')
         GROUP BY section ORDER BY count DESC`, [from, to]),
     ]);
 

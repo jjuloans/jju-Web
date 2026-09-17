@@ -992,7 +992,10 @@ td{padding:11px 16px;font-size:13px;color:var(--text);}
   <div class="modal" style="width:820px;">
     <div class="modal-header">
       <div class="modal-title" id="case-detail-title">Cases</div>
-      <button class="modal-close" onclick="closeCaseDetail()">✕</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="modal-close" onclick="printCaseDetail()" title="Print this list as PDF" style="width:auto;padding:0 14px;">🖨️ Print</button>
+        <button class="modal-close" onclick="closeCaseDetail()">✕</button>
+      </div>
     </div>
     <div class="modal-body" id="case-detail-body"><div class="loading"><span class="spinner"></span>Loading...</div></div>
   </div>
@@ -2401,6 +2404,7 @@ function loadCasesReport() {
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="date" id="case-report-date" value="${new Date().toISOString().split('T')[0]}" onchange="loadCaseReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
           <input type="month" id="case-report-month" value="${new Date().toISOString().slice(0,7)}" onchange="loadCaseReport()" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
+          <button class="crud-btn crud-btn-cancel" onclick="printCasesSummary()" title="Print this report as PDF">🖨️ Print / PDF</button>
         </div>
       </div>
       <div id="case-report-body"><div class="loading"><span class="spinner"></span>Loading...</div></div>
@@ -2459,6 +2463,9 @@ async function loadCaseReport() {
       ? `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;" onclick="showCaseDetail('${section}','${type}')" title="Click to see the list">${val}</td>`
       : `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};opacity:.45;">${val}</td>`;
     const rowHtml = r => `<tr><td style="padding:6px 10px;">${CASE_SECTION_LABELS[r.section]||r.section}</td>${cell(r.opened,r.section,'opened')}${cell(r.closed,r.section,'closed')}</tr>`;
+    // Keep the currently-rendered summary around so printCasesSummary() can
+    // build the print view from it without re-fetching.
+    window._lastCaseSummary = { caseRows, otherRows, opened, closed, periodLabel };
     body.innerHTML = `
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${periodLabel}</div>
       <div style="display:flex;gap:24px;margin-bottom:14px;">
@@ -2489,15 +2496,21 @@ async function showCaseDetail(section, type) {
   body.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
   try {
     let url = `/reports/cases-detail?section=${encodeURIComponent(section)}&type=${type}`;
+    let periodLabel;
     if (caseReportMode === 'daily') {
       const date = (document.getElementById('case-report-date')||{}).value || new Date().toISOString().split('T')[0];
       url += '&date=' + date;
+      periodLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
     } else {
       const monthVal = (document.getElementById('case-report-month')||{}).value || new Date().toISOString().slice(0,7);
       const [y, m] = monthVal.split('-');
       url += `&year=${y}&month=${parseInt(m,10)}`;
+      periodLabel = new Date(parseInt(y,10), parseInt(m,10)-1, 1).toLocaleDateString('en-IN', {month:'long', year:'numeric'});
     }
     const rows = await apiFetch(url);
+    // Keep the currently-shown drill-down list around so printCaseDetail()
+    // can build the print view from it without re-fetching.
+    window._lastCaseDetail = { label, type, periodLabel, rows: Array.isArray(rows) ? rows : [] };
     const fmt = n => (n === null || n === undefined) ? '—' : '₹' + Number(n).toLocaleString('en-IN');
     const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
     body.innerHTML = Array.isArray(rows) && rows.length
@@ -2515,6 +2528,94 @@ async function showCaseDetail(section, type) {
   } catch (e) {
     body.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Failed to load details.</div>';
   }
+}
+
+// ── Print / Save-as-PDF for the Cases Report (summary + drill-down) ──────
+// Reuses the exact letterhead/print pattern already used by printStatement()
+// (JJU Bank header, a plain print-friendly table, and a "Print / Save as
+// PDF" button that also auto-triggers window.print() -- the browser's own
+// print dialog lets staff either print physically or choose "Save as PDF").
+function _caseReportPrintStyles() {
+  return `
+    body{font-family:Arial,sans-serif;color:#111;padding:30px;max-width:800px;margin:0 auto;}
+    h1{font-size:22px;margin:0} h2{font-size:14px;color:#374151;margin:20px 0 8px;border-bottom:1px solid #e5e7eb;padding-bottom:4px;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #111;}
+    .bank-name{font-size:20px;font-weight:800;color:#b45309;}
+    .bank-sub{font-size:11px;color:#6b7280;}
+    table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px;}
+    th{padding:6px 8px;border-bottom:2px solid #e5e7eb;text-align:left;color:#6b7280;font-size:11px;}
+    tr:nth-child(even){background:#f9fafb;}
+    td{padding:6px 8px;border-bottom:1px solid #e5e7eb;}
+    .totals{display:flex;gap:24px;background:#f9fafb;padding:14px;border-radius:8px;margin-bottom:16px;font-size:13px;}
+    .footer{margin-top:30px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center;}
+    @media print{body{padding:10px} button{display:none}}
+  `;
+}
+function _openPrintWindow(title) {
+  const win = window.open('', '_blank');
+  if (!win || win.closed || typeof win.closed === 'undefined') {
+    alert('Popup blocked! Please allow popups for this site and try again.');
+    return null;
+  }
+  return win;
+}
+function _printHeader(subtitle) {
+  return `<div class="header">
+    <div><div class="bank-name">🏦 JJU Bank</div><div class="bank-sub">Jalgaon Jamod Urban Co-op Credit Society</div></div>
+    <div style="text-align:right;font-size:12px;color:#6b7280;">
+      <div style="font-weight:600;font-size:14px;">${subtitle}</div>
+      <div>Generated: ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+    </div>
+  </div>`;
+}
+function printCasesSummary() {
+  const s = window._lastCaseSummary;
+  if (!s) { alert('Load the report first.'); return; }
+  const win = _openPrintWindow('Cases Report'); if (!win) return;
+  const rowHtml = r => `<tr><td>${CASE_SECTION_LABELS[r.section]||r.section}</td><td style="text-align:center;">${r.opened}</td><td style="text-align:center;">${r.closed}</td></tr>`;
+  win.document.write(`<!DOCTYPE html><html><head><title>Cases Report — ${s.periodLabel}</title>
+  <style>${_caseReportPrintStyles()}</style></head><body>
+  ${_printHeader('Account Cases Opened / Closed — ' + s.periodLabel)}
+  <div class="totals">
+    <div>Total Opened: <strong style="color:#1a7a45;">${s.opened}</strong></div>
+    <div>Total Closed: <strong style="color:#c0302a;">${s.closed}</strong></div>
+  </div>
+  <table><thead><tr><th>Account Type</th><th style="text-align:center;">Opened</th><th style="text-align:center;">Closed</th></tr></thead>
+  <tbody>${s.caseRows.map(rowHtml).join('')}</tbody></table>
+  ${s.otherRows.length ? `<div style="margin-top:10px;font-size:11px;color:#6b7280;">Other (non-account) entries in this period — office/bank transactions, not account cases: ${s.otherRows.map(r=>`${r.section} (${r.opened} opened / ${r.closed} closed)`).join(', ')}</div>` : ''}
+  <div class="footer">This is a computer-generated report. | ${new Date().toLocaleString('en-IN')}</div>
+  <br><button onclick="window.print()" style="padding:10px 24px;background:#b45309;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">🖨️ Print / Save as PDF</button>
+  </body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+function printCaseDetail() {
+  const d = window._lastCaseDetail;
+  if (!d) { alert('Open a case list first.'); return; }
+  const win = _openPrintWindow('Cases Report — Detail'); if (!win) return;
+  const fmt = n => (n === null || n === undefined) ? '—' : '₹' + Number(n).toLocaleString('en-IN');
+  const fmtDate = dt => dt ? new Date(dt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+  const dateCol = d.type === 'opened' ? 'OPENED' : 'CLOSED';
+  const subtitle = `${d.label} — ${d.type === 'opened' ? 'Opened' : 'Closed'} — ${d.periodLabel}`;
+  win.document.write(`<!DOCTYPE html><html><head><title>${subtitle}</title>
+  <style>${_caseReportPrintStyles()}</style></head><body>
+  ${_printHeader(subtitle)}
+  ${d.rows.length
+    ? `<table><thead><tr><th>ACC NO</th><th>NAME</th><th>AMOUNT</th><th>${dateCol}</th><th>STATUS</th></tr></thead>
+       <tbody>${d.rows.map(r=>`<tr>
+         <td>${r.account_no||'—'}</td>
+         <td>${r.name||'—'}</td>
+         <td>${fmt(r.amount)}</td>
+         <td>${fmtDate(d.type === 'opened' ? r.date : r.closed_date)}</td>
+         <td>${r.status === 'closed' ? 'Closed' : 'Active'}</td>
+       </tr>`).join('')}</tbody></table>
+       <div style="margin-top:10px;font-size:11px;color:#6b7280;">${d.rows.length} case${d.rows.length===1?'':'s'}</div>`
+    : '<p style="color:#999;font-size:12px">No cases found for this selection.</p>'}
+  <div class="footer">This is a computer-generated report. | ${new Date().toLocaleString('en-IN')}</div>
+  <br><button onclick="window.print()" style="padding:10px 24px;background:#b45309;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">🖨️ Print / Save as PDF</button>
+  </body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
 }
 
 // FIX 2a: removed duplicate inner filterFdAlert (standalone global below is used)
