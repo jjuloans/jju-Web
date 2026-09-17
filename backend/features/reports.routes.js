@@ -11,10 +11,17 @@ router.get('/daily-summary', async (req, res) => {
     const date = req.query.date || new Date().toISOString().split('T')[0];
 
     const [records, cashbook] = await Promise.all([
+      // FIX: "opened" used to be COUNT(*) FILTER (WHERE status='active'),
+      // which only counts cases that are STILL active today. A case that
+      // opened on this date and has since been closed (on this date or any
+      // later date) would silently drop out of "opened" the moment it closed
+      // -- so re-checking an old day's report after an account on it closed
+      // would wrongly show fewer (or zero) cases opened that day. "opened"
+      // and "closed" should each be judged purely by their own date column.
       pool.query(`
         SELECT section,
-          COUNT(*) FILTER (WHERE status='active')  AS opened,
-          COUNT(*) FILTER (WHERE status='closed' AND closed_date::text=$1) AS closed
+          COUNT(*) FILTER (WHERE date::text=$1)        AS opened,
+          COUNT(*) FILTER (WHERE closed_date::text=$1)  AS closed
         FROM records
         WHERE is_deleted=FALSE AND (date::text=$1 OR closed_date::text=$1)
         GROUP BY section`, [date]),
@@ -60,12 +67,20 @@ router.get('/monthly', async (req, res) => {
           COUNT(*) AS entries
         FROM cashbook_entries
         WHERE is_deleted=FALSE AND date::text BETWEEN $1 AND $2`, [from, to]),
+      // NEW: added a per-section `closed` count alongside the existing
+      // `count` (opened) so the admin Reports page can show an opened-vs-
+      // closed breakdown per account type, not just per-section opens. Also
+      // widened the WHERE so a section that only had closures this month
+      // (nothing newly opened) still shows up with count=0, closed=N instead
+      // of being missing from the list entirely.
       pool.query(`
-        SELECT section, COUNT(*) AS count,
-          COALESCE(SUM((data->>'loan_amount')::numeric) FILTER (WHERE section IN ('gold','od')), 0) AS loan_total,
-          COALESCE(SUM((data->>'fd_amount')::numeric)   FILTER (WHERE section='fd'), 0) AS fd_total
+        SELECT section,
+          COUNT(*) FILTER (WHERE date::text BETWEEN $1 AND $2)        AS count,
+          COUNT(*) FILTER (WHERE closed_date::text BETWEEN $1 AND $2) AS closed,
+          COALESCE(SUM((data->>'loan_amount')::numeric) FILTER (WHERE section IN ('gold','od') AND date::text BETWEEN $1 AND $2), 0) AS loan_total,
+          COALESCE(SUM((data->>'fd_amount')::numeric)   FILTER (WHERE section='fd' AND date::text BETWEEN $1 AND $2), 0) AS fd_total
         FROM records
-        WHERE is_deleted=FALSE AND date::text BETWEEN $1 AND $2
+        WHERE is_deleted=FALSE AND (date::text BETWEEN $1 AND $2 OR closed_date::text BETWEEN $1 AND $2)
         GROUP BY section ORDER BY count DESC`, [from, to]),
     ]);
 

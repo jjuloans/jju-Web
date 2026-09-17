@@ -2361,7 +2361,89 @@ async function loadReports() {
         <button class="crud-btn crud-btn-cancel" id="fd-alert-dash-90" onclick="filterFdAlert(90)">Next 90 days (${maturity90.length})</button>
       </div>
       <div id="fd-alert-table-dash">${renderFdAlertTable(maturity30)}</div>
+    </div>
+    <!-- CASES OPENED / CLOSED -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:600;">📆 Account Cases Opened / Closed</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="filter-tabs">
+            <button class="filter-tab active" id="case-mode-daily" onclick="setCaseReportMode('daily')">Daily</button>
+            <button class="filter-tab" id="case-mode-monthly" onclick="setCaseReportMode('monthly')">Monthly</button>
+          </div>
+          <input type="date" id="case-report-date" value="${new Date().toISOString().split('T')[0]}" onchange="loadCaseReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
+          <input type="month" id="case-report-month" value="${new Date().toISOString().slice(0,7)}" onchange="loadCaseReport()" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Loans, Saving, FD, Current, Shares & Membership accounts -- counted by when each account was opened / closed, not by transaction activity on it.</div>
+      <div id="case-report-body"><div class="loading"><span class="spinner"></span>Loading...</div></div>
     </div>`;
+  loadCaseReport();
+}
+
+// Account Cases Opened/Closed (Daily / Monthly)
+let caseReportMode = 'daily';
+const CASE_SECTION_LABELS = {
+  gold: '🥇 Gold Loans', od: '🔄 OD Loans', fd: '📋 Fixed Deposits',
+  saving: '💰 Saving Accounts', current: '🏦 Current Accounts',
+  shares: '📈 Share Accounts', membership: '🪪 Memberships',
+};
+const CASE_SECTIONS = Object.keys(CASE_SECTION_LABELS);
+function setCaseReportMode(mode) {
+  caseReportMode = mode;
+  const dBtn = document.getElementById('case-mode-daily'), mBtn = document.getElementById('case-mode-monthly');
+  if (dBtn) dBtn.classList.toggle('active', mode === 'daily');
+  if (mBtn) mBtn.classList.toggle('active', mode === 'monthly');
+  const dIn = document.getElementById('case-report-date'), mIn = document.getElementById('case-report-month');
+  if (dIn) dIn.style.display = mode === 'daily' ? '' : 'none';
+  if (mIn) mIn.style.display = mode === 'monthly' ? '' : 'none';
+  loadCaseReport();
+}
+async function loadCaseReport() {
+  const body = document.getElementById('case-report-body');
+  if (!body) return;
+  body.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    let rows = [], periodLabel = '';
+    if (caseReportMode === 'daily') {
+      const date = (document.getElementById('case-report-date')||{}).value || new Date().toISOString().split('T')[0];
+      const data = await apiFetch('/reports/daily-summary?date=' + date);
+      rows = (data.sections || []).map(r => ({ section: r.section, opened: parseInt(r.opened)||0, closed: parseInt(r.closed)||0 }));
+      periodLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    } else {
+      const monthVal = (document.getElementById('case-report-month')||{}).value || new Date().toISOString().slice(0,7);
+      const [y, m] = monthVal.split('-');
+      const data = await apiFetch(`/reports/monthly?year=${y}&month=${parseInt(m,10)}`);
+      rows = (data.by_section || []).map(r => ({ section: r.section, opened: parseInt(r.count)||0, closed: parseInt(r.closed)||0 }));
+      periodLabel = new Date(parseInt(y,10), parseInt(m,10)-1, 1).toLocaleDateString('en-IN', {month:'long', year:'numeric'});
+    }
+    const caseRows = CASE_SECTIONS.map(sec => rows.find(r=>r.section===sec) || {section:sec, opened:0, closed:0});
+    const otherRows = rows.filter(r => !CASE_SECTIONS.includes(r.section) && (r.opened||r.closed));
+    // Totals are always the sum of the known account-case sections only —
+    // NOT the backend's raw totals, which (for /reports/monthly especially)
+    // count every records row including office/bank transaction entries that
+    // aren't "cases" at all. Keeps the headline numbers consistent with the
+    // table actually shown below them.
+    const opened = caseRows.reduce((s,r)=>s+r.opened, 0);
+    const closed = caseRows.reduce((s,r)=>s+r.closed, 0);
+    const rowHtml = r => `<tr><td style="padding:6px 10px;">${CASE_SECTION_LABELS[r.section]||r.section}</td><td style="padding:6px 10px;text-align:center;color:#1a7a45;font-weight:700;">${r.opened}</td><td style="padding:6px 10px;text-align:center;color:#c0302a;font-weight:700;">${r.closed}</td></tr>`;
+    body.innerHTML = `
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${periodLabel}</div>
+      <div style="display:flex;gap:24px;margin-bottom:14px;">
+        <div style="font-size:13px;">Total Opened: <strong style="color:#1a7a45;">${opened}</strong></div>
+        <div style="font-size:13px;">Total Closed: <strong style="color:#c0302a;">${closed}</strong></div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="color:var(--muted);text-align:left;"><th style="padding:6px 10px;border-bottom:1px solid var(--border);">Account Type</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;">Opened</th><th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;">Closed</th></tr></thead>
+        <tbody>${caseRows.map(rowHtml).join('')}</tbody>
+      </table>
+      </div>
+      ${otherRows.length ? `<div style="margin-top:10px;font-size:11px;color:var(--muted);">Other (non-account) entries in this period -- office/bank transactions, not account cases: ${otherRows.map(r=>`${r.section} (${r.opened} opened / ${r.closed} closed)`).join(', ')}</div>` : ''}
+    `;
+  } catch (e) {
+    body.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Failed to load report.</div>';
+  }
 }
 
 // FIX 2a: removed duplicate inner filterFdAlert (standalone global below is used)
