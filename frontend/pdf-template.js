@@ -2771,21 +2771,31 @@ function _goldLoanSlipsPage(
     "</div>" +
     "</div>";
 
-  // Font sizes across all 4 slips were bumped up twice now (+1-1.5pt, then
-  // +1pt more). Scale re-tuned at the actual width used (width:% affects
-  // pre-scale line-wrapping, so it has to be measured together with scale,
-  // not derived from a raw/scale=1 measurement at a different width) — 0.81
-  // measured ~272mm with a normal/long test name but hit ~281mm (over the
-  // ~277mm printable A4 height) under an extreme stress case (very long
-  // name + very long loan-amount-in-words + long account numbers all at
-  // once). 0.78 was safe (~262mm normal / ~271mm stress) but left ~15mm of
-  // unused page space. Bumped back up to 0.80 — measured ~269mm normal and
-  // ~273mm under that same extreme stress case, still a real ~4mm safety
-  // margin under the 277mm budget (never spills to a second page), while
-  // filling noticeably more of the page than 0.78 did. width compensated to
-  // 1/0.80 so the scaled box still spans the full printable content width.
+  // BUG FIX: this used to be `transform:scale(0.80)` (with width:125% to
+  // compensate for the visual shrink). That looked safe by every DOM
+  // measurement (getBoundingClientRect() on the scaled box measured well
+  // under the 277mm printable-height budget) but was still spilling the
+  // last slip's tail + the declaration line onto a second page in real
+  // production printing (confirmed against a real customer's data: name
+  // "DILIP THAPSING SASTYA", loan 30700). Root cause: CSS `transform` only
+  // changes how an element is PAINTED -- it does not shrink the box's
+  // actual layout height, which is what the print engine's page-break
+  // calculation uses. So Chrome was still paginating against the full,
+  // un-scaled ~336mm-tall content, breaking mid-way through it, while a
+  // post-transform measurement only ever saw the (irrelevant, for
+  // pagination purposes) visually-shrunk ~269mm.
+  // `zoom` (unlike `transform`) genuinely resizes the box in the layout --
+  // confirmed by generating a real PDF (Chromium's print pipeline, the same
+  // one window.print() drives) and counting pages: transform:scale gave 3
+  // pages (slips split across 2 + the intentional trailing blank page),
+  // zoom gives the correct 2 (all 4 slips on page 1, blank page 2), for
+  // both a normal case and a stress case (very long name, 6-figure amount
+  // in words, "RAMESHCHANDRA VYANKATRAO DESHMUKH PATIL" / "Nine Lakh
+  // Eighty Seven Thousand Six Hundred Fifty Only"). No width compensation
+  // needed -- zoom scales the box's own width along with everything else,
+  // so the plain 210mm from the .spage class already renders correctly.
   return (
-    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;transform:scale(0.80);transform-origin:top left;width:125%">' +
+    '<div class="spage" style="page-break-inside:avoid;break-inside:avoid;zoom:0.80">' +
     slip1 +
     '<div class="sdiv" style="margin:4px 0"></div>' +
     slip2 +
