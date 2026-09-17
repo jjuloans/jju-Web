@@ -48,6 +48,60 @@ router.get('/daily-summary', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// GET /api/reports/cases-detail?section=gold&type=opened&date=YYYY-MM-DD
+// GET /api/reports/cases-detail?section=gold&type=opened&year=2024&month=11
+// Drill-down for the admin "Account Cases Opened/Closed" report: the actual
+// list of records behind one Opened/Closed number, so clicking "110" shows
+// which 110 Gold Loan cases opened that month instead of just the count.
+router.get('/cases-detail', async (req, res) => {
+  try {
+    const { section, type } = req.query;
+    if (!section) return res.status(400).json({ error: 'section is required' });
+    if (type !== 'opened' && type !== 'closed') {
+      return res.status(400).json({ error: "type must be 'opened' or 'closed'" });
+    }
+    const dateCol = type === 'opened' ? 'date' : 'closed_date';
+
+    let whereDate, params;
+    if (req.query.date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(req.query.date)) {
+        return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
+      }
+      whereDate = `${dateCol}::text = $2`;
+      params = [section, req.query.date];
+    } else {
+      const year = parseInt(req.query.year) || new Date().getFullYear();
+      const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+      const from = `${year}-${String(month).padStart(2, '0')}-01`;
+      const to = new Date(year, month, 0).toISOString().split('T')[0];
+      whereDate = `${dateCol}::text BETWEEN $2 AND $3`;
+      params = [section, from, to];
+    }
+
+    const { rows } = await pool.query(`
+      SELECT id, account_no, name, date, closed_date, status,
+        -- Best-effort single "amount" across the differently-named amount
+        -- fields each section's form stores (gold/od use loan_amount, FD
+        -- uses fd_amount, etc.) — shows "—" in the UI when none apply
+        -- (e.g. a membership case with no single amount).
+        COALESCE(
+          (data->>'loan_amount')::numeric,
+          (data->>'fd_amount')::numeric,
+          (data->>'deposit_amount')::numeric,
+          (data->>'transfer_amount')::numeric,
+          (data->>'saving_balance')::numeric,
+          (data->>'to_saving_balance')::numeric
+        ) AS amount
+      FROM records
+      WHERE is_deleted = FALSE AND section = $1 AND ${whereDate}
+      ORDER BY ${dateCol} DESC NULLS LAST, id DESC
+      LIMIT 500
+    `, params);
+
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // GET /api/reports/monthly?year=2024&month=11
 router.get('/monthly', async (req, res) => {
   try {

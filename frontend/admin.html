@@ -421,6 +421,7 @@ td{padding:11px 16px;font-size:13px;color:var(--text);}
     <div class="nav-item" onclick="showPage('gold',this)"><span class="icon">🥇</span>Gold Loans<span class="nav-badge" id="nb-gold">—</span></div>
     <div class="nav-item" id="nav-overdue" onclick="showPage('overdue',this)"><span class="icon">⚠️</span>Overdue<span class="nav-badge" id="nb-overdue">—</span></div>
     <div class="nav-item" onclick="showPage('od',this)"><span class="icon">🔄</span>OD Loans<span class="nav-badge" id="nb-od">—</span></div>
+    <div class="nav-item" onclick="showPage('cases',this)"><span class="icon">📆</span>Cases Report</div>
 
     <div class="nav-section">Deposits</div>
     <div class="nav-item" onclick="showPage('fd',this)"><span class="icon">📋</span>Fixed Deposits<span class="nav-badge" id="nb-fd">—</span></div>
@@ -808,6 +809,11 @@ td{padding:11px 16px;font-size:13px;color:var(--text);}
       <div id="analytics-content"><div class="loading"><span class="spinner"></span>Loading...</div></div>
     </div>
 
+    <!-- CASES REPORT (dedicated tab) -->
+    <div class="page" id="page-cases" style="padding:24px;">
+      <div id="cases-content"><div class="loading"><span class="spinner"></span>Loading...</div></div>
+    </div>
+
     <!-- INTEREST CALCULATOR -->
     <div class="page" id="page-interest" style="padding:0 0 24px;">
       <div id="interest-content"><div class="loading"><span class="spinner"></span>Loading...</div></div>
@@ -981,6 +987,17 @@ td{padding:11px 16px;font-size:13px;color:var(--text);}
   </div>
 </div>
 
+<!-- CASE DETAIL DRILL-DOWN MODAL -->
+<div class="modal-overlay" id="case-detail-overlay" onclick="closeCaseDetailOnOverlay(event)">
+  <div class="modal" style="width:820px;">
+    <div class="modal-header">
+      <div class="modal-title" id="case-detail-title">Cases</div>
+      <button class="modal-close" onclick="closeCaseDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="case-detail-body"><div class="loading"><span class="spinner"></span>Loading...</div></div>
+  </div>
+</div>
+
 <!-- CRUD MANAGER MODAL -->
 <div class="modal-overlay" id="crud-overlay" onclick="closeCrudOnOverlay(event)">
   <div class="modal" style="width:860px;">
@@ -1083,7 +1100,7 @@ function showPage(name, el) {
   document.querySelector('.main').scrollTop = 0;
   if(el) el.classList.add('active');
   currentPage=name;
-  const titles={overview:'Overview',gold:'Gold Loans',overdue:'Overdue Loans',reconcile:'Reconciliation',reports:'Reports',history:'Closed Account History',duplicates:'Duplicate Customers',renewal:'Loan Renewal / Extension',users:'User Management',passbook:'Account Statement',saving:'Saving Accounts',fd:'Fixed Deposits',fdcalendar:'FD Calendar',od:'OD Loans',shares:'Share Accounts',members:'Memberships',customers:'Customers',analytics:'Analytics',interest:'Interest Calculator',export:'Export Data',notifications:'Notifications',backup:'Backup & Restore',pdfsync:'PDF Sync'};
+  const titles={overview:'Overview',gold:'Gold Loans',overdue:'Overdue Loans',reconcile:'Reconciliation',reports:'Reports',history:'Closed Account History',duplicates:'Duplicate Customers',renewal:'Loan Renewal / Extension',users:'User Management',passbook:'Account Statement',saving:'Saving Accounts',fd:'Fixed Deposits',fdcalendar:'FD Calendar',od:'OD Loans',cases:'Cases Report',shares:'Share Accounts',members:'Memberships',customers:'Customers',analytics:'Analytics',interest:'Interest Calculator',export:'Export Data',notifications:'Notifications',backup:'Backup & Restore',pdfsync:'PDF Sync'};
   document.getElementById('topbar-title').textContent=titles[name]||name;
   document.getElementById('global-search').value='';
   document.getElementById('search-results').classList.remove('open');
@@ -1093,7 +1110,7 @@ function showPage(name, el) {
 function loadPage(name) {
   ({overview:loadOverview,gold:()=>loadGold(goldFilter),overdue:loadOverdue,reconcile:loadReconciliation,reports:loadReports,history:loadHistory,duplicates:loadDuplicates,renewal:loadRenewal,users:loadUsers,passbook:loadPassbook,
     saving:()=>loadSaving(savingFilter),fd:()=>loadFD(fdFilter),
-    fdcalendar:loadFDCalendar,od:()=>loadOD(odFilter),
+    fdcalendar:loadFDCalendar,od:()=>loadOD(odFilter),cases:loadCasesReport,
     shares:loadShares,members:loadMembers,customers:loadCustomers,
     analytics:loadAnalytics,interest:loadInterest,export:loadExport,
     notifications:loadNotifications,backup:loadBackup,pdfsync:loadPdfSync})[name]?.();
@@ -2361,21 +2378,31 @@ async function loadReports() {
         <button class="crud-btn crud-btn-cancel" id="fd-alert-dash-90" onclick="filterFdAlert(90)">Next 90 days (${maturity90.length})</button>
       </div>
       <div id="fd-alert-table-dash">${renderFdAlertTable(maturity30)}</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CASES REPORT PAGE (own sidebar tab under Loans)
+// ══════════════════════════════════════════════════════════════
+function loadCasesReport() {
+  const el = document.getElementById('cases-content');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:700;margin-bottom:4px;">📆 Account Cases Opened / Closed</div>
+      <div style="color:var(--muted);font-size:13px;">Loans, Saving, FD, Current, Shares &amp; Membership accounts — counted by when each account was opened / closed, not by transaction activity on it. Click any non-zero number to see the list.</div>
     </div>
-    <!-- CASES OPENED / CLOSED -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:20px;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
-        <div style="font-size:14px;font-weight:600;">📆 Account Cases Opened / Closed</div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" id="case-mode-daily" onclick="setCaseReportMode('daily')">Daily</button>
+          <button class="filter-tab" id="case-mode-monthly" onclick="setCaseReportMode('monthly')">Monthly</button>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <div class="filter-tabs">
-            <button class="filter-tab active" id="case-mode-daily" onclick="setCaseReportMode('daily')">Daily</button>
-            <button class="filter-tab" id="case-mode-monthly" onclick="setCaseReportMode('monthly')">Monthly</button>
-          </div>
           <input type="date" id="case-report-date" value="${new Date().toISOString().split('T')[0]}" onchange="loadCaseReport()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
           <input type="month" id="case-report-month" value="${new Date().toISOString().slice(0,7)}" onchange="loadCaseReport()" style="display:none;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;">
         </div>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Loans, Saving, FD, Current, Shares & Membership accounts -- counted by when each account was opened / closed, not by transaction activity on it.</div>
       <div id="case-report-body"><div class="loading"><span class="spinner"></span>Loading...</div></div>
     </div>`;
   loadCaseReport();
@@ -2426,7 +2453,12 @@ async function loadCaseReport() {
     // table actually shown below them.
     const opened = caseRows.reduce((s,r)=>s+r.opened, 0);
     const closed = caseRows.reduce((s,r)=>s+r.closed, 0);
-    const rowHtml = r => `<tr><td style="padding:6px 10px;">${CASE_SECTION_LABELS[r.section]||r.section}</td><td style="padding:6px 10px;text-align:center;color:#1a7a45;font-weight:700;">${r.opened}</td><td style="padding:6px 10px;text-align:center;color:#c0302a;font-weight:700;">${r.closed}</td></tr>`;
+    // Non-zero counts are clickable — drill down into the actual list of
+    // accounts behind that number via /reports/cases-detail.
+    const cell = (val, section, type) => val > 0
+      ? `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;" onclick="showCaseDetail('${section}','${type}')" title="Click to see the list">${val}</td>`
+      : `<td style="padding:6px 10px;text-align:center;font-weight:700;color:${type==='opened'?'#1a7a45':'#c0302a'};opacity:.45;">${val}</td>`;
+    const rowHtml = r => `<tr><td style="padding:6px 10px;">${CASE_SECTION_LABELS[r.section]||r.section}</td>${cell(r.opened,r.section,'opened')}${cell(r.closed,r.section,'closed')}</tr>`;
     body.innerHTML = `
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${periodLabel}</div>
       <div style="display:flex;gap:24px;margin-bottom:14px;">
@@ -2443,6 +2475,45 @@ async function loadCaseReport() {
     `;
   } catch (e) {
     body.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Failed to load report.</div>';
+  }
+}
+
+// ── Case detail drill-down modal ────────────────────────────────────────
+function closeCaseDetail() { document.getElementById('case-detail-overlay').classList.remove('open'); }
+function closeCaseDetailOnOverlay(e) { if (e.target === document.getElementById('case-detail-overlay')) closeCaseDetail(); }
+async function showCaseDetail(section, type) {
+  document.getElementById('case-detail-overlay').classList.add('open');
+  const label = CASE_SECTION_LABELS[section] || section;
+  document.getElementById('case-detail-title').textContent = `${label} — ${type === 'opened' ? 'Opened' : 'Closed'}`;
+  const body = document.getElementById('case-detail-body');
+  body.innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+  try {
+    let url = `/reports/cases-detail?section=${encodeURIComponent(section)}&type=${type}`;
+    if (caseReportMode === 'daily') {
+      const date = (document.getElementById('case-report-date')||{}).value || new Date().toISOString().split('T')[0];
+      url += '&date=' + date;
+    } else {
+      const monthVal = (document.getElementById('case-report-month')||{}).value || new Date().toISOString().slice(0,7);
+      const [y, m] = monthVal.split('-');
+      url += `&year=${y}&month=${parseInt(m,10)}`;
+    }
+    const rows = await apiFetch(url);
+    const fmt = n => (n === null || n === undefined) ? '—' : '₹' + Number(n).toLocaleString('en-IN');
+    const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+    body.innerHTML = Array.isArray(rows) && rows.length
+      ? `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="color:var(--muted);text-align:left;">${['ACC NO','NAME','AMOUNT', type === 'opened' ? 'OPENED' : 'CLOSED', 'STATUS'].map(h=>`<th style="padding:6px 10px;border-bottom:1px solid var(--border);">${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px 10px;"><span class="acc-no">${r.account_no||'—'}</span></td>
+            <td style="padding:6px 10px;">${r.name||'—'}</td>
+            <td style="padding:6px 10px;">${fmt(r.amount)}</td>
+            <td style="padding:6px 10px;">${fmtDate(type === 'opened' ? r.date : r.closed_date)}</td>
+            <td style="padding:6px 10px;">${r.status === 'closed' ? '<span style="color:#c0302a;">Closed</span>' : '<span style="color:#1a7a45;">Active</span>'}</td>
+          </tr>`).join('')}</tbody></table></div>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted);">${rows.length} case${rows.length===1?'':'s'}${rows.length===500?' (showing first 500)':''}</div>`
+      : '<div style="color:var(--muted);font-size:13px;">No cases found for this selection.</div>';
+  } catch (e) {
+    body.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Failed to load details.</div>';
   }
 }
 
