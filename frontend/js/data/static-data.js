@@ -259,12 +259,28 @@ const SECTIONS = [
     // forms — auto-filled by the lookup, and collect() only picks up fields
     // declared here, so both must exist as real fields to reach the backend.
     sec: "🔁 Saving Acc Transfer",
+    // Fields are ordered/widthed deliberately so the two accounts never get
+    // visually mixed up: each account-number field (and the live-balance
+    // hint under it) takes the FULL row on its own, one after the other
+    // (FROM first, then TO) — rather than the account-number fields and
+    // balance fields interleaving across the 2-column grid, which used to
+    // put e.g. "From Acc Balance" directly beside "To Saving Acc No." on
+    // the same row and made it look like they were related to each other.
+    // Only the two (now unambiguous, clearly-labeled) balance fields pair
+    // up side by side, after both accounts are already chosen.
     fields: [
       {
         id: "from_saving_acc_no",
-        label: "From Saving Acc No. (or search name/mobile)",
+        label: "⬆️ FROM — Saving Acc No. (or search name/mobile)",
         type: "text",
-        w: 1,
+        w: 2,
+        req: true,
+      },
+      {
+        id: "to_saving_acc_no",
+        label: "⬇️ TO — Saving Acc No. (or search name/mobile)",
+        type: "text",
+        w: 2,
         req: true,
       },
       {
@@ -272,13 +288,6 @@ const SECTIONS = [
         label: "From Acc Balance (₹)",
         type: "number",
         w: 1,
-      },
-      {
-        id: "to_saving_acc_no",
-        label: "To Saving Acc No. (or search name/mobile)",
-        type: "text",
-        w: 1,
-        req: true,
       },
       {
         id: "to_saving_balance",
