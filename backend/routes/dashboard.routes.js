@@ -164,7 +164,10 @@ router.get("/customers/:id/profile", async (req, res, next) => {
                   COALESCE((r.data->>'balance')::numeric, gl.loan_amount) AS balance,
                   COALESCE((r.data->>'interest_rate')::numeric, 0)        AS interest_rate,
                   gl.status, COALESCE(gl.loan_date::text, r.date::text)   AS start_date,
-                  r.closed_date::text AS end_date
+                  r.closed_date::text AS end_date,
+                  gl.nominee_name, gl.nominee_relation,
+                  gl.customer_photo_url, gl.photo_ornament,
+                  gl.photo_aadhar_front, gl.photo_aadhar_back, gl.photo_pan
            FROM gold_loans gl
            LEFT JOIN records r ON r.id = gl.record_id AND r.is_deleted = FALSE
            WHERE gl.customer_id = $1
@@ -172,7 +175,9 @@ router.get("/customers/:id/profile", async (req, res, next) => {
           [custId]
         ),
         safeQuery(
-          `SELECT id, acc_no, start_date, interest_rate, balance, status
+          `SELECT id, acc_no, start_date, interest_rate, balance, status,
+                  nominee_name, nominee_relation,
+                  photo_customer, photo_aadhar_front, photo_aadhar_back, photo_pan
            FROM saving_accounts WHERE customer_id = $1
            ORDER BY status = 'active' DESC, acc_no`,
           [custId]
@@ -180,7 +185,9 @@ router.get("/customers/:id/profile", async (req, res, next) => {
         safeQuery(
           `SELECT id, acc_no, start_date, end_date, interest_rate, duration,
                   fd_amount, COALESCE(balance, fd_amount) AS balance,
-                  maturity_amount, status
+                  maturity_amount, status,
+                  nominee_name, nominee_relation,
+                  photo_customer, photo_aadhar_front, photo_aadhar_back, photo_pan
            FROM fd_accounts WHERE customer_id = $1
            ORDER BY status = 'active' DESC, acc_no`,
           [custId]
@@ -199,7 +206,9 @@ router.get("/customers/:id/profile", async (req, res, next) => {
           [custId]
         ),
         safeQuery(
-          `SELECT id, acc_no, membership_type, saving_acc_no, start_date, status
+          `SELECT id, acc_no, membership_type, saving_acc_no, start_date, status,
+                  nominee_name, nominee_relation,
+                  photo_customer, photo_aadhar_front, photo_aadhar_back, photo_pan
            FROM memberships WHERE customer_id = $1
            ORDER BY status = 'active' DESC, acc_no`,
           [custId]

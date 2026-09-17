@@ -987,6 +987,15 @@ td{padding:11px 16px;font-size:13px;color:var(--text);}
   </div>
 </div>
 
+<!-- PHOTO LIGHTBOX (customer profile photo thumbnails) -->
+<div class="modal-overlay" id="photo-lightbox-overlay" onclick="closePhotoLightboxOnOverlay(event)" style="z-index:10000;">
+  <div style="max-width:92vw;max-height:92vh;text-align:center;margin:auto;">
+    <div style="color:#fff;font-weight:700;margin-bottom:10px;font-size:14px;" id="photo-lightbox-title"></div>
+    <img id="photo-lightbox-img" src="" style="max-width:92vw;max-height:82vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.55);background:#fff;">
+    <div style="margin-top:12px;"><button class="modal-close" style="background:#fff;width:auto;padding:0 16px;border-radius:8px;" onclick="closePhotoLightbox()">✕ Close</button></div>
+  </div>
+</div>
+
 <!-- CASE DETAIL DRILL-DOWN MODAL -->
 <div class="modal-overlay" id="case-detail-overlay" onclick="closeCaseDetailOnOverlay(event)">
   <div class="modal" style="width:820px;">
@@ -1094,6 +1103,22 @@ const fdTypeBadge = f => {
   const sub = f.fd_sub_type ? ` title="${esc(f.fd_sub_type)}"` : '';
   return `<span${sub} style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;${style}">${label}</span>`;
 };
+
+// ── Nominee & Photo helpers (Customer Profile) ─────────────────────
+const nomineeCell = row => row.nominee_name
+  ? `${esc(row.nominee_name)}${row.nominee_relation ? ` <span style="color:var(--muted)">(${esc(row.nominee_relation)})</span>` : ''}`
+  : '—';
+// Renders whichever of the given [label, urlField] photo columns are present
+// as small clickable thumbnails; click opens openPhotoLightbox() full-size.
+const photoThumbs = (row, fields) => {
+  const pics = fields.filter(([, key]) => row[key]);
+  if (!pics.length) return '—';
+  return pics.map(([label, key]) =>
+    `<img src="${esc(row[key])}" alt="${esc(label)}" title="${esc(label)}" onclick="openPhotoLightbox(this.src,'${label}')" style="width:26px;height:26px;border-radius:4px;object-fit:cover;border:1px solid #ddd;margin:1px 3px 1px 0;cursor:zoom-in;vertical-align:middle">`
+  ).join('');
+};
+const GOLD_PHOTO_FIELDS = [['Customer','customer_photo_url'],['Ornament','photo_ornament'],['Aadhar Front','photo_aadhar_front'],['Aadhar Back','photo_aadhar_back'],['PAN','photo_pan']];
+const ACC_PHOTO_FIELDS = [['Customer','photo_customer'],['Aadhar Front','photo_aadhar_front'],['Aadhar Back','photo_aadhar_back'],['PAN','photo_pan']];
 
 // ── Navigation ─────────────────────────────────────────────────
 function showPage(name, el) {
@@ -1509,21 +1534,21 @@ async function openProfile(id) {
         ${c.address?`<div class="profile-chip" style="flex:1 1 100%"><div class="profile-chip-label">Address</div><div class="profile-chip-val">${c.address}</div></div>`:''}
       </div>
       <div class="profile-section"><div class="profile-section-title">🥇 Gold Loans (${d.gold_loans.length})</div>
-        ${tbl(d.gold_loans,['Acc No','Loan Amt','Balance','Rate','End Date','Status'],l=>`
+        ${tbl(d.gold_loans,['Acc No','Loan Amt','Balance','Rate','End Date','Status','Nominee','Photos'],l=>`
           <tr><td><span class="acc-no">${esc(l.acc_no)}</span></td><td>${fmt(l.loan_amount)}</td><td>${fmt(l.balance)}</td>
           <td>${esc(l.interest_rate)||'—'}%</td>
           <td style="${isOverdue(l.end_date)&&l.status==='active'?'color:var(--red)':''}">${fmtDate(l.end_date)}</td>
-          <td>${badge(l.status)}</td></tr>`)}
+          <td>${badge(l.status)}</td><td>${nomineeCell(l)}</td><td>${photoThumbs(l,GOLD_PHOTO_FIELDS)}</td></tr>`)}
       </div>
       <div class="profile-section"><div class="profile-section-title">💰 Saving Accounts (${d.saving_accounts.length})</div>
-        ${tbl(d.saving_accounts,['Acc No','Balance','Rate','Status'],a=>`
-          <tr><td><span class="acc-no">${a.acc_no}</span></td><td>${fmt(a.balance)}</td><td>${a.interest_rate||'—'}%</td><td>${badge(a.status)}</td></tr>`)}
+        ${tbl(d.saving_accounts,['Acc No','Balance','Rate','Status','Nominee','Photos'],a=>`
+          <tr><td><span class="acc-no">${a.acc_no}</span></td><td>${fmt(a.balance)}</td><td>${a.interest_rate||'—'}%</td><td>${badge(a.status)}</td><td>${nomineeCell(a)}</td><td>${photoThumbs(a,ACC_PHOTO_FIELDS)}</td></tr>`)}
       </div>
       <div class="profile-section"><div class="profile-section-title">📋 Fixed Deposits (${d.fd_accounts.length})</div>
-        ${tbl(d.fd_accounts,['Acc No','FD Amount','Maturity Amt','Rate','Maturity Date','Status'],f=>`
+        ${tbl(d.fd_accounts,['Acc No','FD Amount','Maturity Amt','Rate','Maturity Date','Status','Nominee','Photos'],f=>`
           <tr><td><span class="acc-no">${f.acc_no}</span></td><td>${fmt(f.fd_amount)}</td>
           <td class="amount-credit">${fmt(f.maturity_amount)}</td><td>${f.interest_rate||'—'}%</td>
-          <td>${fmtDate(f.end_date)}</td><td>${badge(f.status)}</td></tr>`)}
+          <td>${fmtDate(f.end_date)}</td><td>${badge(f.status)}</td><td>${nomineeCell(f)}</td><td>${photoThumbs(f,ACC_PHOTO_FIELDS)}</td></tr>`)}
       </div>
       ${d.od_loans.length?`<div class="profile-section"><div class="profile-section-title">🔄 OD Loans (${d.od_loans.length})</div>
         ${tbl(d.od_loans,['Acc No','Loan Amt','FD Acc','Rate','Status'],o=>`
@@ -1534,13 +1559,20 @@ async function openProfile(id) {
           <tr><td><span class="acc-no">${s.acc_no}</span></td><td>${fmt(s.balance)}</td><td>${badge(s.status)}</td></tr>`)}
       </div>`:''}
       ${d.memberships.length?`<div class="profile-section"><div class="profile-section-title">👥 Memberships (${d.memberships.length})</div>
-        ${tbl(d.memberships,['Acc No','Type','Status'],m=>`
-          <tr><td><span class="acc-no">${m.acc_no}</span></td><td><span class="badge badge-gold">${m.membership_type}</span></td><td>${badge(m.status)}</td></tr>`)}
+        ${tbl(d.memberships,['Acc No','Type','Status','Nominee','Photos'],m=>`
+          <tr><td><span class="acc-no">${m.acc_no}</span></td><td><span class="badge badge-gold">${m.membership_type}</span></td><td>${badge(m.status)}</td><td>${nomineeCell(m)}</td><td>${photoThumbs(m,ACC_PHOTO_FIELDS)}</td></tr>`)}
       </div>`:''}`;
   }catch(e){document.getElementById('profile-body').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`;}
 }
 function closeProfile(){document.getElementById('profile-overlay').classList.remove('open');}
 function closeProfileOnOverlay(e){if(e.target===document.getElementById('profile-overlay'))closeProfile();}
+function openPhotoLightbox(url,label){
+  document.getElementById('photo-lightbox-img').src=url;
+  document.getElementById('photo-lightbox-title').textContent=label||'Photo';
+  document.getElementById('photo-lightbox-overlay').classList.add('open');
+}
+function closePhotoLightbox(){document.getElementById('photo-lightbox-overlay').classList.remove('open');}
+function closePhotoLightboxOnOverlay(e){if(e.target===document.getElementById('photo-lightbox-overlay'))closePhotoLightbox();}
 
 // ── Global Search ────────────────────────────────────────────────
 let gsTimer=null;
