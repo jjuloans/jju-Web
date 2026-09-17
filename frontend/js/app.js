@@ -15122,9 +15122,23 @@ async function postMISInterest() {
         // Type-specific extra chip (kept to one short phrase, not a labeled row)
         var extraChip = '';
         if (sect.key === 'fd' && row.fd_sub_type) {
-          extraChip = _qcEsc(row.fd_sub_type) + (row.end_date ? ' \u00b7 matures ' + row.end_date : '');
+          extraChip = _qcEsc(row.fd_sub_type);
         } else if (sect.key === 'shares' && row.num_shares) {
           extraChip = _qcEsc(row.num_shares) + ' shares';
+        }
+
+        // FD-specific chips: interest rate, maturity (date + amount), and
+        // days to/past maturity \u2014 FD never goes through the accrual-calc
+        // branch above (rate is only set for gold/od), so these are derived
+        // straight from the /api/combined/fd-accounts row instead.
+        var fdInterestChip = '', fdMaturityChip = '', fdDaysChip = '';
+        if (sect.key === 'fd') {
+          if (row.interest_rate) fdInterestChip = parseFloat(row.interest_rate) + '% p.a.';
+          if (row.end_date) {
+            fdMaturityChip = 'Mat: ' + row.end_date + (row.maturity_amount ? ' (' + fmtR(row.maturity_amount) + ')' : '');
+            var _fdDaysTo = Math.round((new Date(row.end_date) - new Date(today)) / 86400000);
+            fdDaysChip = _fdDaysTo >= 0 ? (_fdDaysTo + 'd to maturity') : (Math.abs(_fdDaysTo) + 'd overdue');
+          }
         }
 
         var card = document.createElement('div');
@@ -15152,6 +15166,9 @@ async function postMISInterest() {
             (startDate ? '<span class="qc-chip">' + startDate + '</span>' : '') +
             (calcOk ? '<span class="qc-chip">' + days + 'd</span>' : '') +
             (extraChip ? '<span class="qc-chip">' + extraChip + '</span>' : '') +
+            (fdInterestChip ? '<span class="qc-chip">' + _qcEsc(fdInterestChip) + '</span>' : '') +
+            (fdMaturityChip ? '<span class="qc-chip">' + _qcEsc(fdMaturityChip) + '</span>' : '') +
+            (fdDaysChip ? '<span class="qc-chip">' + _qcEsc(fdDaysChip) + '</span>' : '') +
           '</div>' +
           (!row.record_id ? '<div class="qc-manual-note">No linked transaction \u2014 close/update from the ' + _qcEsc(sect.label) + ' screen</div>' : '');
 
