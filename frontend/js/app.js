@@ -5202,7 +5202,7 @@ function renderTable(rows) {
           ["Metal Type", d.metal_type],
           [
             "Ornaments",
-            d.ornament_items
+            (Array.isArray(d.ornament_items) && d.ornament_items.length)
               ? d.ornament_items
                   .map((r) => `${r.name} × ${r.qty} (${r.weight}gm)`)
                   .join(", ")
