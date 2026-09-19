@@ -10561,7 +10561,9 @@ async function generateAllVouchersPDF() {
        filled a whole A4 page each. Vouchers are laid out 2-per-row in a CSS
        grid instead of stacked full-width, and every internal spacing value
        is tightened — same information, far fewer pages. */
-    @page { size: A4; margin: 6mm 6mm; }
+    /* Landscape (per user request) — only this Covering Vouchers document;
+       every other slip/voucher template stays portrait. */
+    @page { size: A4 landscape; margin: 6mm 6mm; }
     * { box-sizing: border-box; }
     body { font-family: Arial, 'Noto Sans Devanagari', sans-serif; font-size: 8pt; color: #000; margin: 0; }
     .voucher-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5mm; align-items: start; }
