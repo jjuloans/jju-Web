@@ -6565,12 +6565,23 @@ function bankTransactionVoucherPage(
         copyLabel +
         "</span>" +
         "</div>" +
-        // Sub-header: form type + code
+        // Sub-header: form type + code + debit/credit head (moved up into header area)
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 10px;background:#e0e0e0;border-bottom:1px solid #aaa">' +
         '<span style="font-size:7.5pt;font-weight:800">बचत खाते जमा / जमा पावती</span>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
         '<span style="font-size:8.5pt;font-weight:900">' +
         codeStr +
         "</span>" +
+        '<span style="display:inline-block;background:' +
+        dcBg +
+        ";color:" +
+        dcColor +
+        ";border:1px solid " +
+        dcColor +
+        ';padding:0px 8px;border-radius:3px;font-size:7.5pt;font-weight:900">' +
+        dcType +
+        "</span>" +
+        "</div>" +
         "</div>" +
         // Body: denom table left, fields right
         '<div style="display:flex;align-items:flex-start;gap:0;padding:4px 6px 0">' +
@@ -6598,18 +6609,8 @@ function bankTransactionVoucherPage(
         amtStr +
         " /-</div>" +
         '<span style="font-size:7.5pt;font-style:italic;color:#444">' +
-        wrdStr +
+        (expWrd ? "Akshari Rs. " + wrdStr : wrdStr) +
         "</span>" +
-        "</div>" +
-        // DC badge
-        '<div style="display:inline-block;background:' +
-        dcBg +
-        ";color:" +
-        dcColor +
-        ";border:1px solid " +
-        dcColor +
-        ';padding:1px 10px;border-radius:3px;font-size:8pt;font-weight:900;margin-bottom:3px">' +
-        dcType +
         "</div>" +
         // Purpose
         (purposeStr
