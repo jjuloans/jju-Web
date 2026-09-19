@@ -5223,19 +5223,20 @@ function fdClosingSlips_Page(
   }
 
   function scrollTbl2(c2l, c2v, c3l, c3v, dc) {
+    // Debit/Credit is already shown in the header bar (.scode) — this row
+    // no longer repeats it as its own column; that column now carries
+    // Scroll No instead.
     return (
       '<table class="sst"><tr>' +
-      '<th style="width:14%">Scroll No</th><th style="width:22%">' +
+      '<th style="width:24%">' +
       c2l +
       "</th>" +
-      '<th style="width:22%">' +
+      '<th style="width:24%">' +
       c3l +
-      '</th><th style="width:29%">तारीख</th>' +
-      '<th style="width:13%">' +
-      dc +
-      "</th>" +
+      '</th><th style="width:32%">तारीख</th>' +
+      '<th style="width:20%">Scroll No</th>' +
       "</tr><tr>" +
-      "<td></td><td><strong>" +
+      "<td><strong>" +
       c2v +
       "</strong></td><td><strong>" +
       c3v +
@@ -5257,13 +5258,14 @@ function fdClosingSlips_Page(
     '<tr><th class="sl" style="background:#f0f4ff;width:38%">खातेदाराचे नाव</th><td class="sv" style="font-size:11pt;font-weight:800" colspan="3">' +
     nm +
     "</td></tr>" +
-    '<tr><th class="sl" style="background:#f0f4ff">FD रक्कम</th><td class="sv"><strong>रू. ' +
+    '<tr><th class="sl" style="background:#f0f4ff">FD रक्कम</th><td class="sv" colspan="3"><strong>रू. ' +
     fdAmt +
-    ' /-</strong></td><th class="sl" style="background:#f0f4ff;width:22%">अक्षरी</th><td class="sv">' +
+    " /-</strong>&nbsp;&nbsp;<span style=\"font-weight:600;font-style:italic\">(Akshari Rs. " +
     fdWrd +
-    "</td></tr>" +
+    " Only)</span></td></tr>" +
     '<tr><th class="sl" style="background:#f0f4ff;font-size:8.5pt">Transfer</th><td class="sv" colspan="3" style="font-size:8.5pt;color:#555">FD Account → Saving Account</td></tr>' +
     "</table>" +
+    '<div style="height:1.1em">&nbsp;</div>' +
     '<div class="sftr">' +
     '<div class="si"><span class="si-name">लेखापाल / व्यवस्थापक</span></div>' +
     '<div class="si"><span class="si-name">' +
@@ -5282,8 +5284,9 @@ function fdClosingSlips_Page(
     '<tr><th class="sl" style="background:#f0fff4;width:38%">खातेदाराचे नाव</th><td class="sv" style="font-size:11pt;font-weight:800" colspan="3">' +
     nm +
     "</td></tr>" +
-    '<tr><th class="sl" style="background:#f0fff4">FD Maturity रक्कम</th><td class="sv"><strong>रू. .................. /-</strong></td><th class="sl" style="background:#f0fff4;width:22%">अक्षरी</th><td class="sv">रू. .......................................</td></tr>' +
+    '<tr><th class="sl" style="background:#f0fff4">FD Maturity रक्कम</th><td class="sv" colspan="3"><strong>रू. .................. /-</strong>&nbsp;&nbsp;<span style="font-weight:600;font-style:italic">(Akshari Rs. ....................................... Only)</span></td></tr>' +
     "</table>" +
+    '<div style="height:1.1em">&nbsp;</div>' +
     '<div class="sftr">' +
     '<div class="si"><span class="si-name">लेखापाल / व्यवस्थापक</span></div>' +
     '<div class="si"><span class="si-name">' +
@@ -5298,11 +5301,11 @@ function fdClosingSlips_Page(
     orgHdr() +
     '<div class="stbar"><span>** FD व्याज प्रदान (163-1) **</span><span class="scode">FD INT - DB - TRF &nbsp; Debit</span></div>' +
     '<table class="sst"><tr>' +
-    '<th style="width:14%">Scroll No</th><th style="width:22%">व्याज खाते क्र.</th>' +
-    '<th style="width:22%">मुदत ठेव खाते क्र.</th><th style="width:29%">तारीख</th>' +
-    '<th style="width:13%">Debit</th>' +
+    '<th style="width:24%">व्याज खाते क्र.</th>' +
+    '<th style="width:24%">मुदत ठेव खाते क्र.</th><th style="width:32%">तारीख</th>' +
+    '<th style="width:20%">Scroll No</th>' +
     "</tr><tr>" +
-    "<td></td><td><strong>163-1</strong></td><td><strong>" +
+    "<td><strong>163-1</strong></td><td><strong>" +
     fdAcc +
     "</strong></td>" +
     "<td><strong>" +
@@ -5329,11 +5332,11 @@ function fdClosingSlips_Page(
     orgHdr() +
     '<div class="stbar"><span>** FD तात्पुरते व्याज (194-1) **</span><span class="scode">FD INT PROV - DB - TRF &nbsp; Debit</span></div>' +
     '<table class="sst"><tr>' +
-    '<th style="width:14%">Scroll No</th><th style="width:22%">खाते क्र.</th>' +
-    '<th style="width:22%">बचत खाते क्र.</th><th style="width:29%">तारीख</th>' +
-    '<th style="width:13%">Debit</th>' +
+    '<th style="width:24%">खाते क्र.</th>' +
+    '<th style="width:24%">बचत खाते क्र.</th><th style="width:32%">तारीख</th>' +
+    '<th style="width:20%">Scroll No</th>' +
     "</tr><tr>" +
-    "<td></td><td><strong>194-1</strong></td><td><strong>" +
+    "<td><strong>194-1</strong></td><td><strong>" +
     savAcc +
     "</strong></td>" +
     "<td><strong>" +
@@ -5364,8 +5367,7 @@ function fdClosingSlips_Page(
     '<hr class="sdiv">' +
     slip4 +
     declLine() +
-    "</div>" +
-    '<div class="spage-blank"></div>'
+    "</div>"
   );
 }
 
